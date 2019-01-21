@@ -1,0 +1,123 @@
+html{
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+.name{
+    padding: 5px;
+    font-style: italic;
+}
+
+.init{
+    font-style: oblique;
+    padding: 5px;
+}
+
+.hp{
+    font-weight: bold;
+    padding: 5px;
+}
+
+.del{
+    margin-left: 5px;
+}
+
+#topbutts{
+    float: left;
+    top: 120px;
+
+}
+#main list{
+    float: left;
+    margin: 100px;
+}
+
+button{
+    margin-left: 10px;
+}
+
+#botbutts{
+    margin: 1px;
+}
+
+#holder{
+    position: absolute;
+    top: 215px;
+    left: 150px;
+    width: 200px;
+}
+
+#error{
+    position: absolute;
+    color: red;
+}
+
+#closetodeath{
+    background-color: #8e1616;
+    border-radius: 25%;
+    border-color: black;
+}
+
+#newCr{
+    position: relative;
+    left: 12px;
+}
+
+#initTracker{
+    float:left;
+    background-color: gainsboro;
+    padding: 2%;
+    left: 120px;
+    /*background: radial-gradient(#e66465, #9198e5);*/
+}
+#diceroller{
+    position: absolute;
+    top: 20px;
+    right: 30%;
+    width: 200px;
+    /*background-color: #e0f0ff;*/
+    padding: 2%;
+    background-image: linear-gradient(red, yellow, blue);
+}
+#roll_display{
+    top: 50px;
+    right: 10%;
+}
+#roller_gui{
+    position: relative;
+    float: left;
+}
+#output{
+    font-weight: bold;
+}
+#rolls{
+    font-style: italic;
+}
+#mainlist{
+    font-size: 20px;
+}
+#roundheader{
+    text-decoration: underline;
+}
+#genocide{
+    background-color: black;
+    border-radius: 10%;
+    border-color: red;
+    color: #8e1616;
+}
+#pregens{
+    background-color: yellow;
+    padding: 10px;
+}
+#pregens div{
+    padding: 3px;
+}
+
+#pregens button{
+    margin: 4px;
+    margin-left: 10px
+}
+
+.currInit{
+    color:red;
+    font-weight:bold;
+    font-size: 21px;
+}

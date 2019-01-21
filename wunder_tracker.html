@@ -1,0 +1,97 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>roll it!</title>
+    <link rel="stylesheet" href="init_style.css">
+</head>
+<body>
+<div id="initTracker">
+<h2>Welcome to Wunder tracker</h2>
+    
+<div id=topbutts>
+        <button onclick="addHero()">add hero</button>
+        <button onclick="addEnemy()">add enemy</button>
+        <button onclick="toggleDelete()">toggle deletes</button>
+        <button onclick="killEveryone()" hidden="true>"
+             class="del" id="genocide">kill them all</button>
+</div><br><br>
+
+<div id="botbutts">
+    <button onclick="sortList()">reorder</button>
+    <button onclick="rotate()">next turn</button>
+    <input type="checkbox" id="clearInputs" onclick="clearNewCr()">
+    <span>clear inputs?</span>
+    <button onclick="incrementRound(true)">reset round</button>
+</div>
+
+<br>
+<span id="newCr">
+    <input type="text" id="newInit" placeholder="initiative" size="3" onkeypress="if(event.keyCode == 13){constructCr();}">
+    <input type="text" id="newName" placeholder="name" size="8" onkeypress="if(event.keyCode == 13){constructCr();}">
+    <input type="text" id="newHp" placeholder="health" size="2" onkeypress="if(event.keyCode == 13){constructCr();}">
+    <button onclick="constructCr()">make creature</button>
+    <button onclick="savePregen()">save</button>
+    
+    <br><input type="checkbox" id="showPregens" onclick="togglePregens(this)">show pregens    
+</span>
+
+<span class=allpregens hidden="true">
+<h3>Pregens</h3>
+<div id="pregens">
+</div></span>
+
+<h3 id="roundheader">
+    <span>round </span><span id="round">1</span>
+</h3>
+
+<ol id="mainlist">
+</ol>
+
+<div id="holder">
+        <p id="error"></p>
+</div>
+
+<br><p id="debug"></p>
+</div>
+
+<div id="diceroller">
+
+<div id="roller_gui">
+<h3>enter dice here</h3>
+<input id="input" type="text" name="dies" size="10"
+onkeypress="if(event.keyCode == 13){process_result();}"
+    placeholder="3d4+3"><button onclick="saveDieRoll()">save me</button>
+<br><span id="output"></span>
+
+<br>
+<input type="checkbox" id="show_rolls"
+    checked=true>show rolls
+<input type="checkbox" id="show_stats"
+    checked=true>show stats
+
+<br><input type="checkbox" id="showSavedRolls"
+ onclick="toggleSavedRolls(this)">
+show saved rolls
+<br>
+<h4>
+<button onclick="process_result()">
+    roll it</button>
+</h4>
+<div id = "savedRolls">
+</div>
+
+</div>
+
+<div id="roll_display">
+    <p id="rolls"></p>
+    <h2 id="stat_head"></h2>
+    <p id="stats"></p>
+    <h5 id="debug"></h5>
+</div>
+
+<script src="dice_rolling.js"></script>
+<script src="initiative_tracker.js"></script>  
+</div>
+
+</body>
+</html>
