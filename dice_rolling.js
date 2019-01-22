@@ -1,3 +1,12 @@
+
+
+function loadSavedRolls(){
+    var rollKeys = getPregenKeys("roll");
+    for(x in rollKeys){
+        roll = localStorage.getItem(rollKeys[x]);
+        saveDieRoll(roll, true);}
+}
+
 /**
  * gets a random int between 2 numbers
  * @param {int} min minimum value 
@@ -57,7 +66,7 @@ function split_str(raw_str){
 
 /**
  * gets all valid strings that can be evaluated
- * @param {string list} raw_list the list being analyzed
+ * @param {string list} raw_list the list being analyzed, can use split_str()
  * @returns {string list} all valid die rolls
  */
 function get_valid_str(raw_list){
@@ -354,36 +363,58 @@ function process_result(thisEl=null){
 
     var raw_items = split_str(raw_str);
     var valid_terms = get_valid_str(raw_items);
+    if(valid_terms.length == 0){
+        errorTxt("invalid roll");
+        return;}
     var total = eval_terms(valid_terms);
 
-    display_result(total);}
+    display_result(total);
+    clearErrors();}
 
 /**
  * removes an element from the document
  * @param {HTMLelement} el the element to be removed
  */
 function deleteParent(el){
-    el.parentNode.parentNode.removeChild(el.parentNode);
+    var parent = el.parentNode;
+
+    if(parent.getAttribute("class")=="pastRolls"){
+        var roll = parent.childNodes[0].innerHTML;
+        deleteStoredRoll(roll);
+    }
+    parent.parentNode.removeChild(parent);
 }
 
 function rollIsTaken(roll){
-    var parent = document.getElementById("savedRolls");
-    var allChilds = filterList(parent.childNodes, "button");
+    var allChilds = document.getElementsByClassName("pastRolls");
+    if(allChilds.length == 0){
+        return false;}
+
     for(x in allChilds){
-        debug(allChilds[x].innerHTML);
-        debug("this is reached");
-    }
-}
+        if(!isInt(x)){return false;}//no more children to see
+        
+        var childRoll = allChilds[x].childNodes[0].innerHTML;
+        if(childRoll == roll){
+            return true;}
+}}
 
 /**
  * adds an element to the document that allows
  * you to redo the current roll whenever you want
  */
-function saveDieRoll(){
+function saveDieRoll(roll=null, startingLoad=false){
     //save die roll on sidebar
-    var el = document.getElementById("input");
-    var roll = el.value;
-    rollIsTaken(roll);
+    if(roll == null){
+        var el = document.getElementById("input");
+        var roll = el.value;}
+
+    if(rollIsTaken(roll)){
+        errorTxt("die has already been added");
+        return;}
+    roll = merge(get_valid_str(split_str(roll)));
+    if(roll == ""){
+        errorTxt("invalid roll");
+        return;}
 
     var innerTxt = '<button onclick="process_result(this)">'+roll
     +'</button><button onclick="deleteParent(this)">del</button>';
@@ -392,8 +423,26 @@ function saveDieRoll(){
     rollElem.setAttributeNode(newAtt("class", "pastRolls"));
 
     var rollMama = document.getElementById("savedRolls");
-
     rollMama.insertBefore(rollElem, rollMama.childNodes[0]);
+
+    if(!startingLoad){
+        storeRoll(roll);}
+}
+
+function storeRoll(roll){
+    var key = getNewKey("roll");
+    localStorage.setItem(key, roll);
+}
+
+function deleteStoredRoll(roll){
+    var rollKeys = getPregenKeys("roll");
+    for(x in rollKeys){
+        var cont = localStorage.getItem(rollKeys[x]);
+        if(cont == roll){
+            localStorage.removeItem(rollKeys[x]);
+            //return;
+        }
+    }
 }
 
 /**

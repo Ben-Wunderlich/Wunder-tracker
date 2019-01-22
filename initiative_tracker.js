@@ -4,6 +4,7 @@ var PREV_HP_ID="";
 var DEFAULT_HP = 20
 var SPOILERS_OK = true;//for when I am showing to people
 var MAX_LENGTH = 30;
+var maxHpDict = {};
 
 startingSetup();
 
@@ -11,6 +12,7 @@ function startingSetup(){
     if(SPOILERS_OK){
         startingPregens();}
     else{addEnemy();}
+    loadSavedRolls();
 }
 
 /**
@@ -160,7 +162,7 @@ function rename(el){
     newEl.setAttributeNode(att);
     newEl.setAttributeNode(newAtt("size", "8"));
 
-    targ.parentElement.replaceChild(newEl, targ);
+    el.parentElement.replaceChild(newEl, el);
 }
 
 /**
@@ -200,7 +202,7 @@ function setName(newName){
     elem.parentNode.setAttribute("name",newName);
     document.getElementById("initiative"+elem.name).id = "initiative"+newName;
     newEl.setAttributeNode(newAtt("class", "name"));
-    newEl.setAttributeNode(newAtt("onclick", "rename(id)"));
+    newEl.setAttributeNode(newAtt("onclick", "rename(this)"));
 
     elem.parentNode.replaceChild(newEl, elem);
     clearErrors();
@@ -292,7 +294,9 @@ function changeHp(el){
  * @param {str} newHp 
  */
 function setHp(newHp){
-    elem = document.getElementById("being changed");
+    var elem = document.getElementById("being changed");
+    var wasAdded = newHp.indexOf("+") > -1;
+    var plzCleanErrors = false;
     try{
         if(isInt(eval(newHp))){
             newHp = eval(newHp);}}
@@ -301,19 +305,28 @@ function setHp(newHp){
 
     if(!isInt(newHp)){
         newHp=elem.name;
-        errorTxt("initiative must be a number");}
+        errorTxt("health must be a number");}
     
+    var crName = PREV_HP_ID.substr(2);
+    if(newHp > maxHpDict[crName] && wasAdded){
+        var hpDiff = newHp - maxHpDict[crName];
+        errorTxt("healed an excess of "+hpDiff+" points");
+        plzCleanErrors = true;
+        newHp = maxHpDict[crName];
+    }
+
     newEl = newElem("span", parseInt(newHp), true);
     newEl.id=PREV_HP_ID;
     newEl.setAttributeNode(newAtt("class", "hp"));
-    newEl.setAttributeNode(newAtt("onclick", "changeHp(id)"));
+    newEl.setAttributeNode(newAtt("onclick", "changeHp(this)"));
 
     if(newHp <= 0){
         makeRedDel(elem.parentElement);}
     else{makeRedDel(elem.parentElement, true);}
 
     elem.parentElement.replaceChild(newEl, elem);
-    clearErrors();
+    if(!plzCleanErrors){
+        clearErrors();}
 }
 
 /**
@@ -503,7 +516,7 @@ function addHero(init=0, name=null){
     var insideTxt = '<span id="initiative'+heroName+
     '" class="init" onclick="newInit(this)">'+init+
     '</span><span id="'+heroName+
-    '" onclick="rename(id)" class="name">'+heroName+
+    '" onclick="rename(this)" class="name">'+heroName+
     '</span><button onclick="removeCreature(this)" class="del"'
     +hiddenStr+'>del</button>'
 
@@ -544,12 +557,13 @@ function getNewEnemy(init, enNom, hp){
     var delShowing = !document.getElementById("genocide").hidden;
     var hiddenStr = ""
     if(!delShowing){hiddenStr=' hidden="true" ';}
+    maxHpDict[enNom]=hp;
 
     var insideTxt = '<span id="initiative'+enNom+
     '" onclick="newInit(this)" class="init">'+init+'</span><span id="'
-    +enNom+'" onclick="rename(id)" class="name">'
+    +enNom+'" onclick="rename(this)" class="name">'
     +enNom+'</span><span id="hp'+enNom+
-    '" onclick="changeHp(id)" class="hp">'+hp+
+    '" onclick="changeHp(this)" class="hp">'+hp+
     '</span><span>hp</span><button onclick="removeCreature(this)" class="del"'
     +hiddenStr+'">del</button>';
 
@@ -600,6 +614,7 @@ function killEveryone(){
         return;
     }
     alert("you monster...");
+    maxHpDict = {};
     var allMother = document.getElementById("mainlist");
     var allChildren = filterList(allMother.childNodes, "LI");
     for(x in allChildren){
@@ -692,7 +707,7 @@ function incrementRound(resetRound=false){
  * based on creatues saved in browser storage
  */
 function startingPregens(){
-    var allKeys = getAllKeys();
+    var allKeys = getPregenKeys();
     for(x in allKeys){
         var key = allKeys[x];
         createPregenButton(key);
@@ -706,8 +721,7 @@ function startingPregens(){
  * for a saved creature
  * @returns {string} the new key
  */
-function getNewKey(){
-    var base = "pregen";
+function getNewKey(base="pregen"){
     var num = 0;
     var tot = base+num;
     while(localStorage.getItem(tot) != null){
@@ -717,17 +731,19 @@ function getNewKey(){
 }
 
 /**
+ * 
  * @returns all keys stored in the local storage
  */
-function getAllKeys(){
+function getPregenKeys(base="pregen"){
     var allKeys=[];
     for (var key in localStorage){
-        if(key.substr(0,6)=="pregen"){
+        if(key.indexOf(base)!=-1){
             allKeys.push(key);
         }
     }
     return allKeys;
 }
+
 
 /**
  * adds a creature from a pregen to the main list
@@ -752,7 +768,7 @@ function addFromPregen(elem){
  * @returns {boolean} true if name is already a pregen
  */
 function pregenIsRedundant(name){
-    var allPregens = getAllKeys();
+    var allPregens = getPregenKeys();
     var preName="";
     for(x in allPregens){
         preName=localStorage.getItem(allPregens[x]).split(";")[1];
