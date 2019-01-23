@@ -55,14 +55,13 @@
 </div>
 
 <div id="diceroller">
-
+<span id=errHold><div id="rollError"></div></span>
 <div id="roller_gui">
 <h3>enter dice here</h3>
 <input id="input" type="text" name="dies" size="10"
 onkeypress="if(event.keyCode == 13){process_result();}"
     placeholder="3d4+3"><button onclick="saveDieRoll()">save me</button>
 <br><span id="output"></span>
-
 <br>
 <input type="checkbox" id="show_rolls"
     checked=true>show rolls

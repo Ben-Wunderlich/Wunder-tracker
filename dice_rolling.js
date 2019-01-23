@@ -364,7 +364,7 @@ function process_result(thisEl=null){
     var raw_items = split_str(raw_str);
     var valid_terms = get_valid_str(raw_items);
     if(valid_terms.length == 0){
-        errorTxt("invalid roll");
+        errorTxt("invalid roll", "rollError");
         return;}
     var total = eval_terms(valid_terms);
 
@@ -385,6 +385,12 @@ function deleteParent(el){
     parent.parentNode.removeChild(parent);
 }
 
+/**
+ * determines if a roll is already present in browser
+ * local storage
+ * @param {string} roll the roll to be checked
+ * @returns {boolean} whether roll is in the local storage
+ */
 function rollIsTaken(roll){
     var allChilds = document.getElementsByClassName("pastRolls");
     if(allChilds.length == 0){
@@ -409,11 +415,11 @@ function saveDieRoll(roll=null, startingLoad=false){
         var roll = el.value;}
 
     if(rollIsTaken(roll)){
-        errorTxt("die has already been added");
+        errorTxt("die has already been added", "rollError");
         return;}
     roll = merge(get_valid_str(split_str(roll)));
     if(roll == ""){
-        errorTxt("invalid roll");
+        errorTxt("invalid roll", "rollError");
         return;}
 
     var innerTxt = '<button onclick="process_result(this)">'+roll
@@ -429,18 +435,27 @@ function saveDieRoll(roll=null, startingLoad=false){
         storeRoll(roll);}
 }
 
+/**
+ * stores a valid roll in local storage
+ * #note the keys have naming scheme roll, roll1, etc
+ * @param {string} roll the roll to be stored
+ */
 function storeRoll(roll){
     var key = getNewKey("roll");
     localStorage.setItem(key, roll);
 }
 
+/**
+ * removes a roll from the browser localstorage
+ * @param {string} roll the roll to be removed
+ */
 function deleteStoredRoll(roll){
     var rollKeys = getPregenKeys("roll");
     for(x in rollKeys){
         var cont = localStorage.getItem(rollKeys[x]);
         if(cont == roll){
             localStorage.removeItem(rollKeys[x]);
-            //return;
+            return;
         }
     }
 }

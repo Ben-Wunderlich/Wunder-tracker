@@ -69,8 +69,8 @@ function isAHero(init, hp){
 /**
  * makes an error message vibrate back and forth
  */
-function errorWiggle(){
-    var elem = document.getElementById("error");
+function errorWiggle(id){
+    var elem = document.getElementById(id);
     var curr = 0;
     var ide = setInterval(frame, 5);
     var duration=60;
@@ -97,12 +97,15 @@ function errorWiggle(){
  * sets error text to be given string
  * if error text is already there with the same
  * message it will make it wiggle
+ * if second argunemt is given it will use that as 
+ * id of target element
  * @param {string} text the error message content
+ * @param {string} id alternative element
  */
-function errorTxt(text){
-    var target = document.getElementById("error");
+function errorTxt(text, id="error"){
+    var target = document.getElementById(id);
     if(target.innerHTML == text){//if error already being shown
-        errorWiggle(target.id);
+        errorWiggle(id);
     }
     target.innerHTML = text;
 }
@@ -731,7 +734,7 @@ function getNewKey(base="pregen"){
 }
 
 /**
- * 
+ * @param base base name of key, will use "pregen" if none given
  * @returns all keys stored in the local storage
  */
 function getPregenKeys(base="pregen"){
