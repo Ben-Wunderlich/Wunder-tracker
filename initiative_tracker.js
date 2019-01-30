@@ -1,17 +1,19 @@
 var ALL_NAMES =["", " "];
-var PREV_INIT_ID = "";
-var PREV_HP_ID="";
 var DEFAULT_HP = 20
-var SPOILERS_OK = true;//for when I am showing to people
 var MAX_LENGTH = 30;
 var maxHpDict = {};
 
 startingSetup();
 
+/**
+ * creates all the pregens in storage if chosen in storage
+ */
 function startingSetup(){
-    if(SPOILERS_OK){
-        startingPregens();}
-    else{addEnemy();}
+   startingPregens();
+
+    var ini = localStorage.getItem("initializing") == "true"
+    document.getElementById("initialize").checked=ini;
+    
     loadSavedRolls();
 }
 
@@ -35,8 +37,8 @@ function newElem(type, value, setInner=false){
 /**
  * creates new attribute with an initial value
  * @param {str} type the type of attribute, must be all caps
- * @param {*} value the value assigned to the attribute
- * @returns the attribute
+ * @param {string} value the value assigned to the attribute
+ * @returns {HTMLobject} the attribute
  */
 function newAtt(type, value){
     var att=document.createAttribute(type);
@@ -68,9 +70,10 @@ function isAHero(init, hp){
 
 /**
  * makes an error message vibrate back and forth
+ * should only be called internally
+ * @param {HTMLElement} elem the element to be wiggled
  */
-function errorWiggle(id){
-    var elem = document.getElementById(id);
+function errorWiggle(elem){
     var curr = 0;
     var ide = setInterval(frame, 5);
     var duration=60;
@@ -105,7 +108,7 @@ function errorWiggle(id){
 function errorTxt(text, id="error"){
     var target = document.getElementById(id);
     if(target.innerHTML == text){//if error already being shown
-        errorWiggle(id);
+        errorWiggle(target);
     }
     target.innerHTML = text;
 }
@@ -115,6 +118,7 @@ function errorTxt(text, id="error"){
  */
 function clearErrors(){
     document.getElementById("error").innerHTML="";
+    document.getElementById("rollError").innerHTML="";
 }
 
 /**
@@ -132,36 +136,27 @@ function getRoll(){
  * @param {string} newName the new name
  */
 function replaceName(oldName, newName){
-    ind = ALL_NAMES.indexOf(oldName);
+    var ind = ALL_NAMES.indexOf(oldName);
     ALL_NAMES[ind] = newName;
-}
-
-/**
- * checks if any elements of the page are being renamed
- * @returns {boolean} true if there are no other
- * elements beinf renamed
- */
-function canBeRenamed(){
-    elem = document.getElementById("being changed");
-    return elem == null;
+    if(Object.keys(maxHpDict).indexOf(oldName) > -1){
+        var tempHp = maxHpDict[oldName];
+        delete maxHpDict[oldName];
+        maxHpDict[newName] = tempHp;
+    }
 }
 
 /**
  * transforms a name element into an input field
  * #note that the element breing renamed has the
  * id "being changed"
- * @param {string} el the element to be renamed
+ * @param {HTMLElement} el the element to be renamed
  */
 function rename(el){
-    if (!canBeRenamed()){
-        errorTxt("finish last one");
-        return;}
 
-    var newEl = newElem("input", el.id);
-    newEl.id="being changed";
+    var newEl = newElem("input", el.innerHTML);
     newEl.name = el.innerHTML;
 
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setName(value);}");
+    var att=newAtt("onkeypress", "if(event.keyCode == 13){setName(this);}");
     newEl.setAttributeNode(att);
     newEl.setAttributeNode(newAtt("size", "8"));
 
@@ -187,24 +182,40 @@ function nameIsFree(newName, oldName=null){
 }
 
 /**
+ * checks whether n elements parent is a list object
+ * @param {HTMLobject} el the element to be checked
+ * @returns {boolean} true if its parent is a list element
+ */
+function isListElement(el){
+    var parent = el.parentNode;
+    return parent.nodeName=="LI";
+}
+
+/**
  * changes an input field to a span with the value
  * from the input field
- * @param {string} newName the new name(value from field)
+ * @param {HTMLElement} elem the element being renamed
  */
-function setName(newName){
-    elem = document.getElementById("being changed");
+function setName(elem){
+    var newName = elem.value;
+    var oldName = elem.name;
     //if name is taken
-    if(!nameIsFree(newName, elem.name)){
-        newName=elem.name;
+    if(!nameIsFree(newName, oldName)){
+        newName=oldName;
         errorTxt("name already taken");}
     else{
-        replaceName(elem.name, newName);}
+        replaceName(oldName, newName);}
 
     newEl = newElem("span", newName, true);
     newEl.id=newName;
-    elem.parentNode.setAttribute("name",newName);
-    document.getElementById("initiative"+elem.name).id = "initiative"+newName;
-    newEl.setAttributeNode(newAtt("class", "name"));
+    if(isListElement(elem)){
+        elem.parentNode.setAttribute("name",newName);
+        document.getElementById("initiative"+oldName).id = "initiative"+newName;
+        newEl.setAttributeNode(newAtt("class", "name"));
+    }
+    else{
+        updatePregen(elem.parentNode.id, null,newName,null);
+    }
     newEl.setAttributeNode(newAtt("onclick", "rename(this)"));
 
     elem.parentNode.replaceChild(newEl, elem);
@@ -230,18 +241,14 @@ function isInt(numStr){
 /**
  * changes an element into a text field with a value
  * of it's old content
- * @param {HTMLobject} id the object being changed
+ * @param {HTMLElement} el the element whose init is changing
  */
 function newInit(el){
-    if (!canBeRenamed()){
-        errorTxt("finish last one");return;}
-
     var newEl = newElem("input", el.innerHTML);
-    newEl.id="being changed";
+    newEl.id=el.id;
     newEl.name = el.innerHTML;
-    PREV_INIT_ID=el.id;
 
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setInit(value);}");
+    var att=newAtt("onkeypress", "if(event.keyCode == 13){setInit(this);}");
     newEl.setAttributeNode(att);
     newEl.setAttributeNode(newAtt("size", "2"));
     el.parentNode.replaceChild(newEl, el);
@@ -250,21 +257,22 @@ function newInit(el){
 /**
  * changes a text field into a span with it's old value
  * as innerHTML
- * @param {string} newInit the new initiative value
+ * @param {HTMLElement} elem the text field being changed
  */
-function setInit(newInit){
-    elem = document.getElementById("being changed");
-    
+function setInit(elem){
+    var newInit = elem.value;
     if(!isInt(newInit)){
         newInit=elem.name;
         errorTxt("initiative must be a number");}
     
     newEl = newElem("span", newInit, true);
-    newEl.id=PREV_INIT_ID;
+    newEl.id=elem.id;
     newEl.setAttributeNode(newAtt("class", "init"));
-    elem.parentNode.id=newInit;
     newEl.setAttributeNode(newAtt("onclick", "newInit(this)"));
 
+    if(!isListElement(elem)){
+        updatePregen(elem.parentNode.id, newInit,null,null);
+    }
     elem.parentElement.replaceChild(newEl, elem);
     clearErrors();
 }
@@ -275,16 +283,11 @@ function setInit(newInit){
  * @param {HTMLelement} el the element being changed 
  */
 function changeHp(el){
-    if (!canBeRenamed()){
-        errorTxt("finish last one");
-        return;}
-
     var newEl = newElem("input", el.innerHTML);
-    newEl.id="being changed";
     newEl.name = el.innerHTML;
-    PREV_HP_ID=el.id;
+    newEl.id = el.id;
 
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setHp(value);}");
+    var att=newAtt("onkeypress", "if(event.keyCode == 13){setHp(this);}");
     newEl.setAttributeNode(att);
     newEl.setAttributeNode(newAtt("size", "1"));
     el.parentNode.replaceChild(newEl, el);
@@ -294,10 +297,10 @@ function changeHp(el){
  * changes an input field to a span with it's old value
  * note that it will evaluate any expressions 
  * in the given argument
- * @param {str} newHp 
+ * @param {HTMLElement} elem the element being converted 
  */
-function setHp(newHp){
-    var elem = document.getElementById("being changed");
+function setHp(elem){
+    var newHp = elem.value;
     var wasAdded = newHp.indexOf("+") > -1;
     var plzCleanErrors = false;
     try{
@@ -310,23 +313,28 @@ function setHp(newHp){
         newHp=elem.name;
         errorTxt("health must be a number");}
     
-    var crName = PREV_HP_ID.substr(2);
+    var crName = elem.id.substr(2);
     if(newHp > maxHpDict[crName] && wasAdded){
         var hpDiff = newHp - maxHpDict[crName];
         errorTxt("healed an excess of "+hpDiff+" points");
         plzCleanErrors = true;
         newHp = maxHpDict[crName];
     }
+    else{maxHpDict[crName] = newHp;}
 
+    if(!isListElement(elem)){
+        updatePregen(elem.parentNode.id, null,null,newHp);
+    }
     newEl = newElem("span", parseInt(newHp), true);
-    newEl.id=PREV_HP_ID;
+    newEl.id=elem.id;
     newEl.setAttributeNode(newAtt("class", "hp"));
     newEl.setAttributeNode(newAtt("onclick", "changeHp(this)"));
 
-    if(newHp <= 0){
-        makeRedDel(elem.parentElement);}
-    else{makeRedDel(elem.parentElement, true);}
-
+    if(isListElement(elem)){
+        if(newHp <= 0){
+            makeRedDel(elem.parentElement);}
+        else{makeRedDel(elem.parentElement, true);}//gets rid of button
+    }
     elem.parentElement.replaceChild(newEl, elem);
     if(!plzCleanErrors){
         clearErrors();}
@@ -345,7 +353,7 @@ function debug(msg){
 
 /**
  * 
- * @param {element array} list the given list
+ * @param {HTMLElement array} list the given list
  * @param {string} type the type of element to keep
  */
 function filterList(list, type){
@@ -357,13 +365,24 @@ function filterList(list, type){
     return properList;
 }
 
+/**
+ * TESTING METHOD
+ * displays an array
+ * @param {array} arr the array to show
+ */
 function showList(arr){
     for(x in arr){
         debug(arr[x].id);
     }
 }
 
-//note only works with adjacent siblings
+/**
+ * switches the position of 2 adjacent elements
+ * NOTE: they must be adjacent for consitent results
+ * @param {HTMLElement} obj1 
+ * @param {HTMLElement} obj2 
+ * @param {HTMLElement Array} arr the array of all elements
+ */
 function swapElements(obj1, obj2, arr=null) {
     var bothsParent=obj1.parentNode;
     bothsParent.insertBefore(obj2, obj1);
@@ -374,8 +393,13 @@ function swapElements(obj1, obj2, arr=null) {
     [arr[obj1Ind], arr[obj2Ind]] = [arr[obj2Ind], arr[obj1Ind]];
     return arr;}
 
+/**
+ * sorts an array of html elements where each element
+ * has a number as its id, this is what they are sorted by
+ * note it is sorted so that higher values are higher on the page
+ * @param {HTMLElement Array} arr 
+ */
 function bubbleSort(arr){
-    //showList(arr);
     var n = arr.length;
     for(x=0; x<n*2; x++){
         for(y=0; y<n-1; y++){
@@ -409,6 +433,10 @@ function rotate(){
     childs[newInd].setAttributeNode(newAtt("class", "currInit")); 
 }
 
+/**
+ * moves the class which causes an element to be
+ * bolded to the first child of the element with id "mainlist"
+ */
 function createStyle(){
     var parent=document.getElementById("mainlist");
     theStyler=parent.childNodes[0];
@@ -418,8 +446,8 @@ function createStyle(){
 }
 
 /**
- * moves the highlighted effect to the creature
- * at the top of the list
+ * moves the highlighted effect to the first child of the
+ * htmlElement with id "mainlist"
  */
 function moveStyleTop(){
 
@@ -438,8 +466,9 @@ function moveStyleTop(){
 }
 
 /**
- * sorts the list of creature in terms of their
- * initiative scores with highest at the top
+ * sorts the list of creatures under element with
+ * ID "mainlist" in terms of their
+ * ID with highest at the top
  */
 function sortList(){
     var list=document.getElementById("mainlist");
@@ -505,7 +534,7 @@ function tooManyCr(){
 function addHero(init=0, name=null){
     if(tooManyCr()){return;}
     if(name == null || !nameIsFree(name)){
-        heroName=getValidName(true, name);}//replace XXX with this
+        heroName=getValidName(true, name);}
     else{heroName=name;}
         ALL_NAMES.push(heroName);
 
@@ -690,7 +719,8 @@ function makeRedDel(parent, undo=false){
 
 /**
  * increments the counter that keeps track of
- * which round it is
+ * which round it is, or changes it back to 1
+ * @param {boolean} resetRound if true round set to 1
  */
 function incrementRound(resetRound=false){
     var el=document.getElementById("round");
@@ -715,13 +745,16 @@ function startingPregens(){
         var key = allKeys[x];
         createPregenButton(key);
         var el = document.getElementById(key);
-        addFromPregen(el.childNodes[0]);
+        if(initializeChars()){
+            addFromPregen(el.childNodes[0]);}
     }
 }
 
 /**
  * creates a new key with which to store data
- * for a saved creature
+ * for a saved creature using a given string or
+ * "pregen" by default
+ * @param {string} base (optional) the base string to make the key out of
  * @returns {string} the new key
  */
 function getNewKey(base="pregen"){
@@ -734,7 +767,8 @@ function getNewKey(base="pregen"){
 }
 
 /**
- * @param base base name of key, will use "pregen" if none given
+ * creates a key using 'pregen' or one you give
+ * @param {string} base (optional) the substitute base
  * @returns all keys stored in the local storage
  */
 function getPregenKeys(base="pregen"){
@@ -826,15 +860,39 @@ function createPregenButton(key){
     var isHero = isAHero(init, hp);
     var mamaNode = document.getElementById("pregens");
     if(isHero){
-        var innerStr = '<span>'+init+" "+name+'</span><button onclick="addFromPregen(this)">create</button><button onclick="removePregen(this)">destroy</button>'
+        var innerStr = '<span onclick = "newInit(this)">'
+        +init+'</span>'+" <span id='' onclick=rename(this)>"
+        +name+'</span></span><button onclick="addFromPregen(this)">'+
+        'create</button><button onclick="removePregen(this)">destroy</button>'
         var newEl = newElem("div", innerStr, true);
     }
     else{
-        var innerStr = '<span>'+init+" "+name+" "+hp+'</span><button onclick="addFromPregen(this)">create</button><button onclick="removePregen(this)">destroy</button>'
+        var innerStr = '<span onclick = "newInit(this)">'
+        +init+"</span> <span id='' onclick=rename(this)>"
+        +name+'</span><span onclick = "changeHp(this)"> '+hp+
+        '</span><button onclick="addFromPregen(this)">'+
+        'create</button><button onclick="removePregen(this)">destroy</button>'
         var newEl = newElem("div", innerStr, true);
     }
     newEl.id=key;
     mamaNode.insertBefore(newEl, mamaNode.childNodes[0]);
+}
+
+/**
+ * note set ones you dont know to null and it will 
+ * pull from stored version for those fields
+ * @param {string} key the key for that stored value
+ * @param {any} init the new initiative 
+ * @param {string} name the new name
+ * @param {any} hp the new hp
+ */
+function updatePregen(key, init, name, hp){
+    var old = localStorage.getItem(key).split(";");
+    if(init==null){init=old[0];}
+    if(name==null){name=old[1];}
+    if(hp==null){hp=old[2];}
+    var val = init+";"+name+";"+hp;
+    localStorage.setItem(key, val);
 }
 
 /**
@@ -861,4 +919,30 @@ function togglePregens(checkBox){
         el.hidden=false;}
     else{
         el.hidden=true;}
+}
+
+function toggleInitialize(el){
+    if(el.checked){
+        localStorage.setItem("initializing", true);}
+    else{
+        localStorage.setItem("initializing", false);}
+}
+
+/**
+ * determines based on local storage if each pregen should
+ * be initialized, it is true by default
+ * @returns {boolean} true if pregens should be made
+ */
+function initializeChars(){
+    var shouldMake = localStorage.getItem("initializing");
+    switch(shouldMake){
+        case null:
+        case "true":
+            return true;//true by default
+        case "false":
+            return false;
+        default:
+            debug("ERROR, something went wrong when accessing"+
+            " local storage, try clearing it to fix problem");
+    }
 }
