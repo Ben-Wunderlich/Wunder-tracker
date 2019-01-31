@@ -34,6 +34,7 @@
     
     <br><input type="checkbox" id="showPregens" onclick="togglePregens(this)">show pregens    
     <input type="checkbox" id="initialize" onclick="toggleInitialize(this)">initialize creatures 
+    <input type="checkbox" onclick="toggleNameGen(this)">nameGenerator?
 </span>
 
 <span class=allpregens hidden="true">
@@ -45,25 +46,22 @@
     <span>round </span><span id="round">1</span>
 </h3>
 
-<ol id="mainlist">
-</ol>
+<ol id="mainlist"></ol>
 
-<div id="holder">
-        <p id="error"></p>
-</div>
+<div id="holder"><p id="error"></p></div>
 
-<br><p id="debug"></p>
-</div>
+<br><p id="debug"></p></div>
 
-<div id="diceroller">
+
+<div id="diceroller" draggable="true">
 <span id=errHold><div id="rollError"></div></span>
 <div id="roller_gui">
 <h3>enter dice here</h3>
 <input id="input" type="text" name="dies" size="10"
 onkeypress="if(event.keyCode == 13){process_result();}"
     placeholder="3d4+3"><button onclick="saveDieRoll()">save me</button>
-<br><span id="output"></span>
-<br>
+<br><span id="output"></span><br>
+
 <input type="checkbox" id="show_rolls"
     checked=true>show rolls
 <input type="checkbox" id="show_stats"
@@ -73,25 +71,27 @@ onkeypress="if(event.keyCode == 13){process_result();}"
  onclick="toggleSavedRolls(this)" checked="true">
 show saved rolls
 <br>
-<h4>
-<button onclick="process_result()">
-    roll it</button>
-</h4>
-<div id = "savedRolls">
-</div>
 
+<h4><button onclick="process_result()">roll it</button>
+</h4>
+<div id = "savedRolls"></div>
 </div>
 
 <div id="roll_display">
     <p id="rolls"></p>
-    <h2 id="stat_head"></h2>
+    <h3 id="stat_head"></h3>
     <p id="stats"></p>
     <h5 id="debug"></h5>
 </div>
+</div>
+
+<span id="hideNameGen" hidden>
+<iframe id="nameGen" src="https://www.fantasynamegenerators.com/celtic-breton-names.php"
+></iframe></span>
 
 <script src="dice_rolling.js"></script>
-<script src="initiative_tracker.js"></script>  
-</div>
+<script src="initiative_tracker.js"></script>
+<script src="drag_drop.js"></script> 
 
 </body>
 </html>

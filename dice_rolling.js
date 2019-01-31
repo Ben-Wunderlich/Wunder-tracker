@@ -1,5 +1,7 @@
 
-
+/**
+ * creates saved rolls for each roll in localstorage
+ */
 function loadSavedRolls(){
     var rollKeys = getPregenKeys("roll");
     for(x in rollKeys){

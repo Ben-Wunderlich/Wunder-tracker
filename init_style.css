@@ -1,5 +1,6 @@
 html{
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    background-color: #202935;
 }
 .name{
     padding: 5px;
@@ -63,16 +64,16 @@ button{
 }
 
 #initTracker{
-    float:left;
+    position: absolute;
+    left: 20px; top: 20px;
     background-color: gainsboro;
     padding: 2%;
-    left: 120px;
     /*background: radial-gradient(#e66465, #9198e5);*/
 }
 #diceroller{
     position: absolute;
     top: 20px;
-    right: 30%;
+    right: 10%;
     width: 200px;
     /*background-color: #e0f0ff;*/
     padding: 2%;
@@ -88,6 +89,7 @@ button{
 }
 #output{
     font-weight: bold;
+    font-size: 14pt;
 }
 #rolls{
     font-style: italic;
@@ -137,4 +139,20 @@ button{
     -1px 1px 0 #000,
     1px 1px 0 #000;
     top: 25px;
+}
+
+#stat_head{
+    text-decoration: underline;
+}
+
+#nameGen{
+    position: absolute;
+    left: 40%;
+    top: 30px;
+    width: 350px;
+    height: 450px;
+    resize: vertical;
+    border: 10px;
+    border: inset;
+    border-color: brown;
 }

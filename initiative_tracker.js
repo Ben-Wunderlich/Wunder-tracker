@@ -11,8 +11,7 @@ startingSetup();
 function startingSetup(){
    startingPregens();
 
-    var ini = localStorage.getItem("initializing") == "true"
-    document.getElementById("initialize").checked=ini;
+    document.getElementById("initialize").checked=initializeChars();
     
     loadSavedRolls();
 }
@@ -223,20 +222,30 @@ function setName(elem){
 }
 
 /**
- * checks whether a string is a valid integer
- * @param {string} numStr the string bring tested
+ * checks whether a object can be converted to
+ * a valid integer
+ * @param {any} numStr the object bring tested
  * @returns {boolean} true if it can be converted
- * into aninteger
+ * into an integer
  */
 function isInt(numStr){
-    result = Number(numStr);
-    if(numStr==""){
+    if(1+numStr+1 == "11"){//see below for explanation
         return false;}
+
+    result = Number(numStr);
     if(isNaN(result)){
-        return false}
+
+        return false;
+    }
     else{
         return true;}
 }
+/*when converting "" to int it became 0,
+ so when checking if it is empty string I had to
+ check what 1+num+1 equals, if it is "11",
+ it is a string because it is concatonated,
+ if it is 2 then it is 0 because the 2 numbers are added
+*/
 
 /**
  * changes an element into a text field with a value
@@ -273,6 +282,8 @@ function setInit(elem){
     if(!isListElement(elem)){
         updatePregen(elem.parentNode.id, newInit,null,null);
     }
+    else{elem.parentNode.id=newInit;}//update list item id(for sorting)
+
     elem.parentElement.replaceChild(newEl, elem);
     clearErrors();
 }
@@ -283,8 +294,9 @@ function setInit(elem){
  * @param {HTMLelement} el the element being changed 
  */
 function changeHp(el){
-    var newEl = newElem("input", el.innerHTML);
-    newEl.name = el.innerHTML;
+    var curHp = el.innerHTML.split("/")[0];
+    var newEl = newElem("input", curHp);
+    newEl.name = curHp;
     newEl.id = el.id;
 
     var att=newAtt("onkeypress", "if(event.keyCode == 13){setHp(this);}");
@@ -304,28 +316,35 @@ function setHp(elem){
     var wasAdded = newHp.indexOf("+") > -1;
     var plzCleanErrors = false;
     try{
-        if(isInt(eval(newHp))){
-            newHp = eval(newHp);}}
+        var result = Math.round(eval(newHp));
+        debug("evalueated to be "+result);
+        if(isInt(result)){//XXX something going wrong here
+            newHp = result;
+            debug("we gucci");}
+    }
     catch(err){
         newHp = elem.name;}
+    debug("1result is"+newHp)
 
     if(!isInt(newHp)){
         newHp=elem.name;
         errorTxt("health must be a number");}
-    
+    debug("2result is"+newHp)
+
     var crName = elem.id.substr(2);
-    if(newHp > maxHpDict[crName] && wasAdded){
-        var hpDiff = newHp - maxHpDict[crName];
+    var maxHP = maxHpDict[crName];
+
+    if(newHp > maxHP && wasAdded){
+        var hpDiff = newHp - maxHP;
         errorTxt("healed an excess of "+hpDiff+" points");
         plzCleanErrors = true;
-        newHp = maxHpDict[crName];
+        newHp = maxHP;
     }
-    else{maxHpDict[crName] = newHp;}
 
     if(!isListElement(elem)){
         updatePregen(elem.parentNode.id, null,null,newHp);
     }
-    newEl = newElem("span", parseInt(newHp), true);
+    newEl = newElem("span", newHp+"/"+maxHP, true);
     newEl.id=elem.id;
     newEl.setAttributeNode(newAtt("class", "hp"));
     newEl.setAttributeNode(newAtt("onclick", "changeHp(this)"));
@@ -372,9 +391,7 @@ function filterList(list, type){
  */
 function showList(arr){
     for(x in arr){
-        debug(arr[x].id);
-    }
-}
+        debug(arr[x].id);}}
 
 /**
  * switches the position of 2 adjacent elements
@@ -401,7 +418,7 @@ function swapElements(obj1, obj2, arr=null) {
  */
 function bubbleSort(arr){
     var n = arr.length;
-    for(x=0; x<n*2; x++){
+    for(x=0; x<n; x++){
         for(y=0; y<n-1; y++){
             if(parseInt(arr[y].id) < parseInt(arr[y+1].id)){
                 arr=swapElements(arr[y], arr[y+1], arr);
@@ -574,8 +591,6 @@ function addHero(init=0, name=null){
 function getNewEnemy(init, enNom, hp){
     if(enNom==null || !nameIsFree(enNom)){
         enNom=getValidName(false, enNom);}
-    /*if(!isInt(init)){
-        init = getRoll();}*/
     if(!isInt(hp)){
         hp = DEFAULT_HP}
     
@@ -595,7 +610,7 @@ function getNewEnemy(init, enNom, hp){
     '" onclick="newInit(this)" class="init">'+init+'</span><span id="'
     +enNom+'" onclick="rename(this)" class="name">'
     +enNom+'</span><span id="hp'+enNom+
-    '" onclick="changeHp(this)" class="hp">'+hp+
+    '" onclick="changeHp(this)" class="hp">'+hp+"/"+hp+
     '</span><span>hp</span><button onclick="removeCreature(this)" class="del"'
     +hiddenStr+'">del</button>';
 
@@ -660,8 +675,7 @@ function killEveryone(){
  */
 function toggleDelete(){
     var delButts = document.getElementsByClassName("del");
-    var doReveal = false;
-    if(delButts[0].hidden==true){doReveal=true;}
+    var doReveal = delButts[0].hidden;
   
     for(x in delButts){
         if(delButts[x].id!="closetodeath"){
@@ -741,11 +755,12 @@ function incrementRound(resetRound=false){
  */
 function startingPregens(){
     var allKeys = getPregenKeys();
+    var shouldMakeButts = initializeChars();
     for(x in allKeys){
         var key = allKeys[x];
         createPregenButton(key);
         var el = document.getElementById(key);
-        if(initializeChars()){
+        if(shouldMakeButts){
             addFromPregen(el.childNodes[0]);}
     }
 }
@@ -780,7 +795,6 @@ function getPregenKeys(base="pregen"){
     }
     return allKeys;
 }
-
 
 /**
  * adds a creature from a pregen to the main list
@@ -921,6 +935,10 @@ function togglePregens(checkBox){
         el.hidden=true;}
 }
 
+/**
+ * stores the user preference for whether to initialize pregens
+ * @param {HTMLElement} el the checkbox being toggled
+ */
 function toggleInitialize(el){
     if(el.checked){
         localStorage.setItem("initializing", true);}
@@ -929,7 +947,7 @@ function toggleInitialize(el){
 }
 
 /**
- * determines based on local storage if each pregen should
+ * determines based on local storage if pregens should
  * be initialized, it is true by default
  * @returns {boolean} true if pregens should be made
  */
@@ -946,3 +964,15 @@ function initializeChars(){
             " local storage, try clearing it to fix problem");
     }
 }
+
+/**
+ * looks at a checkbox and makes name generator window
+ * hidden if it isn't checked and vice versa
+ * @param {HTMLElement} el the checkbox being checked
+ */
+function toggleNameGen(el){
+    var nameGenerator= document.getElementById("hideNameGen");
+    nameGenerator.hidden = !el.checked;
+}
+
+//XXX change max hp
