@@ -1,6 +1,6 @@
 var ALL_NAMES =["", " "];
 var DEFAULT_HP = 20
-var MAX_LENGTH = 30;
+var MAX_LENGTH = 20;
 var maxHpDict = {};
 
 startingSetup();
@@ -64,7 +64,8 @@ function isAHero(init, hp){
         return false;}
     if(init==null && hp!=null){//if no init but has hp
         return false;}
-    else{errorTxt("check isAhero, something went very wrong");}
+    else{errorTxt("check isAhero, something went very wrong");
+    debug("check isAhero, something went very wrong");}
 }
 
 /**
@@ -113,7 +114,7 @@ function errorTxt(text, id="error"){
 }
 
 /**
- * sets the error text to ""
+ * sets the errorText element to ""
  */
 function clearErrors(){
     document.getElementById("error").innerHTML="";
@@ -142,6 +143,34 @@ function replaceName(oldName, newName){
         delete maxHpDict[oldName];
         maxHpDict[newName] = tempHp;
     }
+}
+
+/**
+ * finds the lengths of the innerHTML of all
+ * span children of an element
+ * @param {HTMLelement} el the element being checked
+ * @returns {int} the length of all it's children
+ */
+function allChildsLen(el){
+    var innersLen = 0;
+    var childs = filterList(el.childNodes, "SPAN");
+    for(x in childs){
+        innersLen += childs[x].innerHTML.length;
+    }
+    innersLen += el.getAttribute("name").length;//idk why I have to add this
+    return innersLen;}
+
+/**
+ * determines if the total space teken by an element
+ * is too big to display
+ * @param {HTMLElement} el one of the children of the list element
+ * @returns {boolean} true if it is too long
+ */
+function nameTooLong(el){
+    if(allChildsLen(el.parentNode) > MAX_LENGTH){
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -186,8 +215,7 @@ function nameIsFree(newName, oldName=null){
  * @returns {boolean} true if its parent is a list element
  */
 function isListElement(el){
-    var parent = el.parentNode;
-    return parent.nodeName=="LI";
+    return el.parentNode.nodeName=="LI";
 }
 
 /**
@@ -198,12 +226,15 @@ function isListElement(el){
 function setName(elem){
     var newName = elem.value;
     var oldName = elem.name;
-    //if name is taken
+
     if(!nameIsFree(newName, oldName)){
         newName=oldName;
         errorTxt("name already taken");}
-    else{
-        replaceName(oldName, newName);}
+    
+    if(nameTooLong(elem)){
+        errorTxt("name is too long");
+        newName = oldName;
+    }else{clearErrors();}
 
     newEl = newElem("span", newName, true);
     newEl.id=newName;
@@ -218,7 +249,7 @@ function setName(elem){
     newEl.setAttributeNode(newAtt("onclick", "rename(this)"));
 
     elem.parentNode.replaceChild(newEl, elem);
-    clearErrors();
+    replaceName(oldName, newName);
 }
 
 /**
@@ -289,6 +320,45 @@ function setInit(elem){
 }
 
 /**
+ * converts an element into a text input field 
+ * with an initial value of the current max hp
+ * @param {HTMLElement} el the element to be converted
+ */
+function changeMaxHp(el){
+    var len = el.innerHTML.length;
+    var maxHp = el.innerHTML.substr(1, len-4);
+
+    var newEl = newElem("input", maxHp);
+    newEl.id = maxHp;
+    var att=newAtt("onkeypress", "if(event.keyCode == 13){setMaxHp(this);}");
+    newEl.setAttributeNode(att);
+    newEl.setAttributeNode(newAtt("size", "2"));
+    el.parentNode.replaceChild(newEl, el);
+}
+
+/**
+ * converts a max hp text input field to a span
+ * @param {HTMLElement} el the element to be converted
+ */
+function setMaxHp(el){
+    var newMax = el.value;
+    newMax = evalStr(newMax, el.id, "max health must be a number");
+    if(newMax <= 0){newMax=1;}
+
+    newEl = newElem("span", "/"+newMax+" hp", true);
+    newEl.setAttributeNode(newAtt("onclick", "changeMaxHp(this)"));
+
+    var name = el.parentNode.getAttribute("name");
+    maxHpDict[name] = newMax;
+
+    if(Number(el.previousElementSibling.innerHTML)> newMax){
+        el.previousElementSibling.innerHTML=newMax;
+    }
+
+    el.parentElement.replaceChild(newEl, el);
+}
+
+/**
  * changes a span into a text field with its old
  * value on the inside
  * @param {HTMLelement} el the element being changed 
@@ -315,21 +385,8 @@ function setHp(elem){
     var newHp = elem.value;
     var wasAdded = newHp.indexOf("+") > -1;
     var plzCleanErrors = false;
-    try{
-        var result = Math.round(eval(newHp));
-        debug("evalueated to be "+result);
-        if(isInt(result)){//XXX something going wrong here
-            newHp = result;
-            debug("we gucci");}
-    }
-    catch(err){
-        newHp = elem.name;}
-    debug("1result is"+newHp)
 
-    if(!isInt(newHp)){
-        newHp=elem.name;
-        errorTxt("health must be a number");}
-    debug("2result is"+newHp)
+    newHp = evalStr(newHp, elem.name, "health must be a number");
 
     var crName = elem.id.substr(2);
     var maxHP = maxHpDict[crName];
@@ -338,13 +395,12 @@ function setHp(elem){
         var hpDiff = newHp - maxHP;
         errorTxt("healed an excess of "+hpDiff+" points");
         plzCleanErrors = true;
-        newHp = maxHP;
-    }
+        newHp = maxHP;}
 
     if(!isListElement(elem)){
         updatePregen(elem.parentNode.id, null,null,newHp);
     }
-    newEl = newElem("span", newHp+"/"+maxHP, true);
+    newEl = newElem("span", newHp, true);
     newEl.id=elem.id;
     newEl.setAttributeNode(newAtt("class", "hp"));
     newEl.setAttributeNode(newAtt("onclick", "changeHp(this)"));
@@ -360,8 +416,31 @@ function setHp(elem){
 }
 
 /**
- * used for sending text to an element on the page
- * only for debugging
+ * tries to evalute a string as an equation to get an int
+ * if that fails it retuns a backup value and sends 
+ * an error message to the document if one is given
+ * @param {any} val the item to be evaluated
+ * @param {int} backup the value to be returned if it fails
+ * @param {string} errorMsg (optional) the message if things go wrong
+ * @returns {int} the evaluated version of val, or backup 
+ * if comverting didnt work.
+ */
+function evalStr(val, backup, errorMsg=null){
+    try{
+        var result = Math.round(eval(val));
+        if(isInt(result)){
+            return result;
+    }}
+    catch(err){
+        if(errorMsg != null){
+            errorTxt(errorMsg);}
+        return backup;}
+}
+
+/**
+ * TESTING METHOD
+ * used for sending text to a fixed
+ * element on the page
  * @param {any} msg the mesage to be added
  */
 function debug(msg){
@@ -371,9 +450,12 @@ function debug(msg){
 }
 
 /**
- * 
+ * filters a list so that only elements of the
+ * specified type are returned
  * @param {HTMLElement array} list the given list
- * @param {string} type the type of element to keep
+ * @param {string} type the type of element to keep, should be in all caps
+ * @returns {HTMLElement Array} the list containing 
+ * all list elements from 'list' of type 'type'
  */
 function filterList(list, type){
     var properList=[];
@@ -602,7 +684,7 @@ function getNewEnemy(init, enNom, hp){
     el.id=init;
     el.setAttributeNode(newAtt("name", enNom));
     var delShowing = !document.getElementById("genocide").hidden;
-    var hiddenStr = ""
+    var hiddenStr = "";
     if(!delShowing){hiddenStr=' hidden="true" ';}
     maxHpDict[enNom]=hp;
 
@@ -610,8 +692,9 @@ function getNewEnemy(init, enNom, hp){
     '" onclick="newInit(this)" class="init">'+init+'</span><span id="'
     +enNom+'" onclick="rename(this)" class="name">'
     +enNom+'</span><span id="hp'+enNom+
-    '" onclick="changeHp(this)" class="hp">'+hp+"/"+hp+
-    '</span><span>hp</span><button onclick="removeCreature(this)" class="del"'
+    '" onclick="changeHp(this)" class="hp">'+hp+
+    "</span><span onclick='changeMaxHp(this)'>/"+hp+" hp"+
+    '</span><button onclick="removeCreature(this)" class="del"'
     +hiddenStr+'">del</button>';
 
     el.innerHTML = insideTxt;
@@ -974,5 +1057,3 @@ function toggleNameGen(el){
     var nameGenerator= document.getElementById("hideNameGen");
     nameGenerator.hidden = !el.checked;
 }
-
-//XXX change max hp
