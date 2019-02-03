@@ -1,6 +1,6 @@
 var ALL_NAMES =["", " "];
 var DEFAULT_HP = 20
-var MAX_LENGTH = 20;
+var MAX_LENGTH = 35;
 var maxHpDict = {};
 
 startingSetup();
@@ -138,11 +138,6 @@ function getRoll(){
 function replaceName(oldName, newName){
     var ind = ALL_NAMES.indexOf(oldName);
     ALL_NAMES[ind] = newName;
-    if(Object.keys(maxHpDict).indexOf(oldName) > -1){
-        var tempHp = maxHpDict[oldName];
-        delete maxHpDict[oldName];
-        maxHpDict[newName] = tempHp;
-    }
 }
 
 /**
@@ -157,7 +152,7 @@ function allChildsLen(el){
     for(x in childs){
         innersLen += childs[x].innerHTML.length;
     }
-    innersLen += el.getAttribute("name").length;//idk why I have to add this
+    innersLen += filterList(el.childNodes, "INPUT")[0].value.length;
     return innersLen;}
 
 /**
@@ -167,7 +162,8 @@ function allChildsLen(el){
  * @returns {boolean} true if it is too long
  */
 function nameTooLong(el){
-    if(allChildsLen(el.parentNode) > MAX_LENGTH){
+    var len = allChildsLen(el.parentNode);
+    if(len > MAX_LENGTH){
         return true;
     }
     return false;
@@ -325,8 +321,7 @@ function setInit(elem){
  * @param {HTMLElement} el the element to be converted
  */
 function changeMaxHp(el){
-    var len = el.innerHTML.length;
-    var maxHp = el.innerHTML.substr(1, len-4);
+    var maxHp = getMaxHp(el, true);
 
     var newEl = newElem("input", maxHp);
     newEl.id = maxHp;
@@ -349,7 +344,6 @@ function setMaxHp(el){
     newEl.setAttributeNode(newAtt("onclick", "changeMaxHp(this)"));
 
     var name = el.parentNode.getAttribute("name");
-    maxHpDict[name] = newMax;
 
     if(Number(el.previousElementSibling.innerHTML)> newMax){
         el.previousElementSibling.innerHTML=newMax;
@@ -388,8 +382,7 @@ function setHp(elem){
 
     newHp = evalStr(newHp, elem.name, "health must be a number");
 
-    var crName = elem.id.substr(2);
-    var maxHP = maxHpDict[crName];
+    var maxHP = getMaxHp(elem);
 
     if(newHp > maxHP && wasAdded){
         var hpDiff = newHp - maxHP;
@@ -413,6 +406,24 @@ function setHp(elem){
     elem.parentElement.replaceChild(newEl, elem);
     if(!plzCleanErrors){
         clearErrors();}
+}
+
+/**
+ * determins the max hp of a list element,
+ * it checks either the next element or the one passed
+ * to find the max hp string
+ * @param {HTMLElement} el the element or one next to max hp
+ * @param {boolean} isMaxElem (optional)whether the element passed
+ * is the one containing max hp, false by default
+ */
+function getMaxHp(el, isMaxElem=false){
+    var rawStr;
+    if(isMaxElem){rawStr=el.innerHTML;}
+
+    else{rawStr = el.nextElementSibling.innerHTML;}
+ 
+    var max = rawStr.substr(1, rawStr.length-4);
+    return max;
 }
 
 /**
@@ -686,7 +697,6 @@ function getNewEnemy(init, enNom, hp){
     var delShowing = !document.getElementById("genocide").hidden;
     var hiddenStr = "";
     if(!delShowing){hiddenStr=' hidden="true" ';}
-    maxHpDict[enNom]=hp;
 
     var insideTxt = '<span id="initiative'+enNom+
     '" onclick="newInit(this)" class="init">'+init+'</span><span id="'
@@ -744,7 +754,6 @@ function killEveryone(){
         return;
     }
     alert("you monster...");
-    maxHpDict = {};
     var allMother = document.getElementById("mainlist");
     var allChildren = filterList(allMother.childNodes, "LI");
     for(x in allChildren){
