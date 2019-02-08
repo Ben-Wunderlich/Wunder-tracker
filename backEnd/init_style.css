@@ -1,6 +1,7 @@
 html{
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     background-color: #202935;
+    cursor: default;
 }
 .name{
     padding: 5px;
@@ -71,11 +72,12 @@ button{
 }
 #diceroller{
     position: absolute;
-    top: 20px;
+    top: 5%;
     right: 10%;
     width: 200px;
     padding: 2%;
-    background-image: linear-gradient(red, yellow, blue);
+    color: black;
+    background-image: linear-gradient(#D60270, #9B4F96, #0038A8);
 }
 #roll_display{
     top: 50px;
@@ -153,4 +155,12 @@ button{
     border: 10px;
     border: inset;
     border-color: brown;
+}
+
+#rickRoll{
+    position: absolute;
+    top: 5%;
+    right: 1%;
+    color: #202935;
+    border: 0px;
 }

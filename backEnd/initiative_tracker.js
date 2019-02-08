@@ -527,7 +527,7 @@ function rotate(){
     var childs = filterList(parent.childNodes, "LI");
     if(childs.length==0){return;}
 
-    var theStyler = document.getElementsByClassName("currInit")[0];
+    var theStyler = getCurrCr();
     if(theStyler == null){
         createStyle();
         return;
@@ -565,7 +565,7 @@ function moveStyleTop(){
     var childs = filterList(parent.childNodes, "LI");
     if(childs.length==0){return;}
 
-    var theStyler = document.getElementsByClassName("currInit")[0];
+    var theStyler = getCurrCr();
     if(theStyler != null){
         theStyler.removeAttribute("class");}
 
@@ -731,13 +731,20 @@ function addEnemy(init=null, name=null, hp=null){
 }
 
 /**
+ * XXX
+ */
+function getCurrCr(){
+    return document.getElementsByClassName("currInit")[0];
+}
+
+/**
  * deletes a creature from the main list
  * @param {HTMLelement} cr the creature to be deleted
  */
 function removeCreature(cr){
     //put button by each one and if you press it they dead
     var el = cr.parentNode.parentNode;//document.getElementById(id);
-    var isCurrTurn = cr.parentNode == document.getElementsByClassName("currInit")[0];
+    var isCurrTurn = cr.parentNode == getCurrCr();
     temp=el.name;
     el.removeChild(cr.parentNode);
     ALL_NAMES.splice(ALL_NAMES.indexOf(temp), 1 );
@@ -1065,4 +1072,48 @@ function initializeChars(){
 function toggleNameGen(el){
     var nameGenerator= document.getElementById("hideNameGen");
     nameGenerator.hidden = !el.checked;
+}
+
+/**
+ * just a fun easter egg
+ * @param {HTMLElement} el 
+ */
+function rickRoll(el){
+    var changeTo = "";
+    var link = 'https://www.youtube.com/watch?v=CYqq9Ovz_9c';
+    switch(el.innerHTML){
+        case "secrets":
+            changeTo = "made you look";
+            break;
+        case "made you look":
+            changeTo = "really, again?";
+            break;
+        case "really, again?":
+            changeTo = "while you are here...";
+            break;
+        case "while you are here...":
+            changeTo = "I can go all day";
+            break;
+        case "I can go all day":
+            changeTo = ".";
+            link="https://www.youtube.com/watch?v=WuzBpuiXnu4";
+            break;
+        case ".":
+            changeTo = "..";
+            lnk= "https://www.youtube.com/watch?v=6-1Ue0FFrHY";
+            break;
+        case "..":
+            changeTo = "...";
+            link="https://www.youtube.com/watch?v=qiHXxrCB5yk";
+            break;
+        case "...":
+            changeTo = "you win";
+            link="https://www.youtube.com/watch?v=6F74mBRjwTc";
+            break;
+        default:
+            changeTo="you win";
+            link = "https://www.youtube.com/watch?v=k9iYm9PEAHg";
+    }
+    window.open(link, '_blank');
+    el.innerHTML=changeTo;
 }
