@@ -164,3 +164,17 @@ button{
     color: #202935;
     border: 0px;
 }
+
+@keyframes attentionGrab{
+    0% {font-size: 12px}
+    50% {font-size: 15px}
+    100% {font-size: 12px}
+}
+.empha{
+    background-color: #f2e721;
+    color: #0b1584;
+    padding: 4px;
+    animation-name: attentionGrab;
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+}

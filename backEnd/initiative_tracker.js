@@ -14,6 +14,7 @@ function startingSetup(){
     document.getElementById("initialize").checked=initializeChars();
     
     loadSavedRolls();
+    styleReorder(true);
 }
 
 /**
@@ -171,8 +172,6 @@ function nameTooLong(el){
 
 /**
  * transforms a name element into an input field
- * #note that the element breing renamed has the
- * id "being changed"
  * @param {HTMLElement} el the element to be renamed
  */
 function rename(el){
@@ -312,7 +311,7 @@ function setInit(elem){
     else{elem.parentNode.id=newInit;}//update list item id(for sorting)
 
     elem.parentElement.replaceChild(newEl, elem);
-    clearErrors();
+    clearErrors();styleReorder()
 }
 
 /**
@@ -585,7 +584,7 @@ function sortList(){
     var rawList = list.childNodes;
     var trimmedList = filterList(rawList, "LI");
     bubbleSort(trimmedList);
-    moveStyleTop();
+    moveStyleTop();styleReorder(true);
 }
 
 /**
@@ -630,10 +629,22 @@ function countCreatures(){
 function tooManyCr(){
     var maxCreatures = 25;
     if(countCreatures() > maxCreatures){
-        errorTxt("Too many creatures")
+        errorTxt("Too many creatures");
         return true;
     }
     return false;
+}
+
+/**
+ * XXXmake it so removed when reordered
+ */
+function styleReorder(removeStyle=false){
+    var name = "empha";
+    var el = document.getElementById("reorder");
+    if(removeStyle){
+        el.classList.remove(name);
+    }
+    else{el.classList.add(name);}
 }
 
 /**
@@ -668,8 +679,8 @@ function addHero(init=0, name=null){
 
     var listParent = document.getElementById("mainlist");
     listParent.insertBefore(el, listParent.childNodes[0]);
-    moveStyleTop();
-    clearErrors();
+    
+    moveStyleTop();clearErrors();styleReorder()
 }
 
 /**
@@ -726,8 +737,7 @@ function addEnemy(init=null, name=null, hp=null){
     if(el==null){return;}
     var listParent = document.getElementById("mainlist");
     listParent.insertBefore(el, listParent.childNodes[0]);
-    moveStyleTop();
-    clearErrors();
+    moveStyleTop();clearErrors();styleReorder();
 }
 
 /**
@@ -752,7 +762,7 @@ function removeCreature(cr){
 }
 
 /**
- * dounle chaecks if you want to then deletes
+ * double chaecks if you want to then deletes
  * all creatures in the main list
  */
 function killEveryone(){
@@ -784,8 +794,12 @@ function toggleDelete(){
 
 /**
  * clears all inputs where user enters creature data
+ * XXX@param
  */
-function clearNewCr(){
+function clearNewCr(elToClear=null){
+    if(elToClear!=null){
+        elToClear.value="";return;}
+
     if(!document.getElementById("clearInputs").checked){
         return;}
     document.getElementById("newHp").value="";
