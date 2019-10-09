@@ -784,7 +784,7 @@ function killEveryone(){
     for(x in allChildren){
         removeCreature(allChildren[x].childNodes[0]);}
     toggleDelete();
-}
+}//branch test
 
 /**
  * changes whether the user can see the delete buttons
