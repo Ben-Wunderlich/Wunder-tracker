@@ -1,7 +1,6 @@
 var ALL_NAMES =["", " "];
 var DEFAULT_HP = 20
 var MAX_LENGTH = 35;
-var maxHpDict = {};
 
 startingSetup();
 
