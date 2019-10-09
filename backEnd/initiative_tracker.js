@@ -511,11 +511,19 @@ function swapElements(obj1, obj2, arr=null) {
 function bubbleSort(arr){
     var n = arr.length;
     for(x=0; x<n; x++){
+        var swapped=false;
         for(y=0; y<n-1; y++){
             if(parseInt(arr[y].id) < parseInt(arr[y+1].id)){
                 arr=swapElements(arr[y], arr[y+1], arr);
+                swapped=true;
             }
-}}}
+        }
+        if(!swapped){
+            console.log("broken after "+(x+1)+" pass(es) of "+(arr.length));
+            break;
+        }
+}}
+
 
 /**
  * moves the highlighted style to the next creature
@@ -784,11 +792,11 @@ function killEveryone(){
  */
 function toggleDelete(){
     var delButts = document.getElementsByClassName("del");
-    var doReveal = delButts[0].hidden;
+    var doReveal = !delButts[0].hidden;
   
     for(x in delButts){
         if(delButts[x].id!="closetodeath"){
-            delButts[x].hidden= !doReveal;}
+            delButts[x].hidden= doReveal;}
     }
 }
 
