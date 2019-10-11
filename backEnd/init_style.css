@@ -41,10 +41,11 @@ button{
 }
 
 #holder{
-    position: absolute;
-    top: 215px;
-    left: 150px;
+    top: -40px;
+    left: 170px;
     width: 200px;
+    position: relative;
+
 }
 
 #error{

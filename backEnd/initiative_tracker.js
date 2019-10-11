@@ -1,7 +1,6 @@
 var ALL_NAMES =["", " "];
 var DEFAULT_HP = 20
-var MAX_LENGTH = 35;
-var maxHpDict = {};
+var MAX_LENGTH = 30;
 
 startingSetup();
 
@@ -66,7 +65,7 @@ function isAHero(init, hp){
     if(init==null && hp!=null){//if no init but has hp
         return false;}
     else{errorTxt("check isAhero, something went very wrong");
-    debug("check isAhero, something went very wrong");}
+    console.log("check isAhero, something went very wrong");}
 }
 
 /**
@@ -123,12 +122,11 @@ function clearErrors(){
 }
 
 /**
- * gets a random number between 1 and 20
+ * generates a random number between 1 and 20
  * @return {int} the number from 1 to 20
  */
 function getRoll(){
-    var rand = Math.floor(Math.random()*20 + 1);
-    return rand;
+    return Math.floor(Math.random()*20 + 1);
 }
 
 /**
@@ -142,28 +140,13 @@ function replaceName(oldName, newName){
 }
 
 /**
- * finds the lengths of the innerHTML of all
- * span children of an element
- * @param {HTMLelement} el the element being checked
- * @returns {int} the length of all it's children
- */
-function allChildsLen(el){
-    var innersLen = 0;
-    var childs = filterList(el.childNodes, "SPAN");
-    for(x in childs){
-        innersLen += childs[x].innerHTML.length;
-    }
-    innersLen += filterList(el.childNodes, "INPUT")[0].value.length;
-    return innersLen;}
-
-/**
  * determines if the total space teken by an element
  * is too big to display
  * @param {HTMLElement} el one of the children of the list element
- * @returns {boolean} true if it is too long
+ * @returns {boolean} true if it is too long, else false
  */
 function nameTooLong(el){
-    var len = allChildsLen(el.parentNode);
+    var len = $(el.parentNode).attr("name").length;
     if(len > MAX_LENGTH){
         return true;
     }
@@ -179,11 +162,10 @@ function rename(el){
     var newEl = newElem("input", el.innerHTML);
     newEl.name = el.innerHTML;
 
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setName(this);}");
-    newEl.setAttributeNode(att);
-    newEl.setAttributeNode(newAtt("size", "8"));
+    $(newEl).attr("onkeypress", "if(event.keyCode == 13){setName(this);}");
+    $(newEl).attr("size", "8");
 
-    el.parentElement.replaceChild(newEl, el);
+    $(el).replaceWith(newEl);
 }
 
 /**
@@ -234,14 +216,14 @@ function setName(elem){
     newEl = newElem("span", newName, true);
     newEl.id=newName;
     if(isListElement(elem)){
-        elem.parentNode.setAttribute("name",newName);
-        document.getElementById("initiative"+oldName).id = "initiative"+newName;
-        newEl.setAttributeNode(newAtt("class", "name"));
+        $(elem.parentNode).attr("name", newName);
+        $("#initiative"+oldName).attr("initiative"+newName);
+        $(newEl).attr("class", "name");
     }
     else{
         updatePregen(elem.parentNode.id, null,newName,null);
     }
-    newEl.setAttributeNode(newAtt("onclick", "rename(this)"));
+    $(newEl).attr("onclick", "rename(this)");
 
     elem.parentNode.replaceChild(newEl, elem);
     replaceName(oldName, newName);
@@ -283,9 +265,8 @@ function newInit(el){
     newEl.id=el.id;
     newEl.name = el.innerHTML;
 
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setInit(this);}");
-    newEl.setAttributeNode(att);
-    newEl.setAttributeNode(newAtt("size", "2"));
+    $(newEl).attr("onkeypress", "if(event.keyCode == 13){setInit(this);}");
+    $(newEl).attr("size", "2");  
     el.parentNode.replaceChild(newEl, el);
 }
 
@@ -302,8 +283,8 @@ function setInit(elem){
     
     newEl = newElem("span", newInit, true);
     newEl.id=elem.id;
-    newEl.setAttributeNode(newAtt("class", "init"));
-    newEl.setAttributeNode(newAtt("onclick", "newInit(this)"));
+    $(newEl).addClass("init");
+    $(newEl).attr("onclick", "newInit(this)");
 
     if(!isListElement(elem)){
         updatePregen(elem.parentNode.id, newInit,null,null);
@@ -324,9 +305,8 @@ function changeMaxHp(el){
 
     var newEl = newElem("input", maxHp);
     newEl.id = maxHp;
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setMaxHp(this);}");
-    newEl.setAttributeNode(att);
-    newEl.setAttributeNode(newAtt("size", "2"));
+    $(newEl).attr("onkeypress", "if(event.keyCode == 13){setMaxHp(this);}");
+    $(newEl).attr("size", "2");
     el.parentNode.replaceChild(newEl, el);
 }
 
@@ -340,9 +320,10 @@ function setMaxHp(el){
     if(newMax <= 0){newMax=1;}
 
     newEl = newElem("span", "/"+newMax+" hp", true);
-    newEl.setAttributeNode(newAtt("onclick", "changeMaxHp(this)"));
+    //newEl.setAttributeNode(newAtt("onclick", "changeMaxHp(this)"));
+    $(newEl).attr("onclick", "changeMaxHp(this)");
 
-    var name = el.parentNode.getAttribute("name");
+    //var name = el.parentNode.getAttribute("name");
 
     if(Number(el.previousElementSibling.innerHTML)> newMax){
         el.previousElementSibling.innerHTML=newMax;
@@ -362,9 +343,8 @@ function changeHp(el){
     newEl.name = curHp;
     newEl.id = el.id;
 
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setHp(this);}");
-    newEl.setAttributeNode(att);
-    newEl.setAttributeNode(newAtt("size", "1"));
+    $(newEl).attr("onkeypress", "if(event.keyCode == 13){setHp(this);}");
+    $(newEl).attr("size", "1");
     el.parentNode.replaceChild(newEl, el);
 }
 
@@ -394,8 +374,8 @@ function setHp(elem){
     }
     newEl = newElem("span", newHp, true);
     newEl.id=elem.id;
-    newEl.setAttributeNode(newAtt("class", "hp"));
-    newEl.setAttributeNode(newAtt("onclick", "changeHp(this)"));
+    $(newEl).addClass("hp");
+    $(newEl).attr("onclick", "changeHp(this)");
 
     if(isListElement(elem)){
         if(newHp <= 0){
@@ -448,18 +428,6 @@ function evalStr(val, backup, errorMsg=null){
 }
 
 /**
- * TESTING METHOD
- * used for sending text to a fixed
- * element on the page
- * @param {any} msg the mesage to be added
- */
-function debug(msg){
-    var target = document.getElementById("debug");
-    var content=target.innerHTML+msg+"<br>";
-    target.innerHTML = content;
-}
-
-/**
  * filters a list so that only elements of the
  * specified type are returned
  * @param {HTMLElement array} list the given list
@@ -476,53 +444,31 @@ function filterList(list, type){
     return properList;
 }
 
-/**
- * TESTING METHOD
- * displays an array
- * @param {array} arr the array to show
- */
-function showList(arr){
-    for(x in arr){
-        debug(arr[x].id);}}
+function elNum(el){
+    return parseInt(el.id);
+}
 
-/**
- * switches the position of 2 adjacent elements
- * NOTE: they must be adjacent for consitent results
- * @param {HTMLElement} obj1 
- * @param {HTMLElement} obj2 
- * @param {HTMLElement Array} arr the array of all elements
- */
-function swapElements(obj1, obj2, arr=null) {
-    var bothsParent=obj1.parentNode;
-    bothsParent.insertBefore(obj2, obj1);
-
-    if(arr==null){return;}
-    var obj1Ind = arr.indexOf(obj1);
-    var obj2Ind = arr.indexOf(obj2);
-    [arr[obj1Ind], arr[obj2Ind]] = [arr[obj2Ind], arr[obj1Ind]];
-    return arr;}
-
-/**
- * sorts an array of html elements where each element
- * has a number as its id, this is what they are sorted by
- * note it is sorted so that higher values are higher on the page
- * @param {HTMLElement Array} arr 
- */
-function bubbleSort(arr){
-    var n = arr.length;
-    for(x=0; x<n; x++){
-        var swapped=false;
-        for(y=0; y<n-1; y++){
-            if(parseInt(arr[y].id) < parseInt(arr[y+1].id)){
-                arr=swapElements(arr[y], arr[y+1], arr);
-                swapped=true;
-            }
+function insertionSort(arr, n){
+    for(i=1; i<n; i++){
+        var savedEl = arr[i];
+        var val = elNum(savedEl);
+        var j = i-1
+        while(j>=0 && elNum(arr[j]) < val){
+            arr[j+1]= arr[j];
+            j--;
         }
-        if(!swapped){
-            console.log("broken after "+(x+1)+" pass(es) of "+(arr.length));
-            break;
-        }
-}}
+        arr[j+1] = savedEl;
+    }
+    return arr;
+}
+
+function replaceChildren(childArr){
+    var parent = $("#mainlist").get(0);
+    $(parent).empty();
+    for (child of childArr){
+        parent.append(child);
+    }
+}
 
 
 /**
@@ -530,8 +476,7 @@ function bubbleSort(arr){
  * or back to the start if it is at the end
  */
 function rotate(){
-    var parent=document.getElementById("mainlist");
-    var childs = filterList(parent.childNodes, "LI");
+    var childs = $("#mainlist").find("li").get();
     if(childs.length==0){return;}
 
     var theStyler = getCurrCr();
@@ -539,27 +484,22 @@ function rotate(){
         createStyle();
         return;
     }
-    theStyler.removeAttribute("class");
+    $(theStyler).removeClass("currInit");
 
-    var prevInd = childs.indexOf(theStyler);
-    var newInd = prevInd + 1;
+    var newInd = childs.indexOf(theStyler) + 1;
     if (newInd >= childs.length){
-    newInd = 0;
-    incrementRound();}
+        newInd = 0;
+        incrementRound();}
 
-    childs[newInd].setAttributeNode(newAtt("class", "currInit")); 
+    $(childs[newInd]).addClass("currInit");
 }
 
 /**
- * moves the class which causes an element to be
- * bolded to the first child of the element with id "mainlist"
+ * adds currInit class the the first element in the main list
+ * the class makes it larger and red
  */
 function createStyle(){
-    var parent=document.getElementById("mainlist");
-    theStyler=parent.childNodes[0];
-
-    var att = newAtt("class", "currInit");
-    theStyler.setAttributeNode(att);
+    $("#mainlist").find("li").first().addClass("currInit");
 }
 
 /**
@@ -567,19 +507,18 @@ function createStyle(){
  * htmlElement with id "mainlist"
  */
 function moveStyleTop(){
-
-    var parent=document.getElementById("mainlist");
-    var childs = filterList(parent.childNodes, "LI");
-    if(childs.length==0){return;}
-
     var theStyler = getCurrCr();
+
     if(theStyler != null){
-        theStyler.removeAttribute("class");}
+        $(theStyler).removeClass("currInit");}
 
     if(theStyler==null){
         createStyle();return;}
 
-    childs[0].setAttributeNode(newAtt("class", "currInit"));
+    if($("#mainlist").find("li").get().length > 0){
+        $("#mainlist").find("li").first().attr("class", "currInit");
+    }
+    //childs[0].setAttributeNode(newAtt("class", "currInit"));
 }
 
 /**
@@ -588,10 +527,10 @@ function moveStyleTop(){
  * ID with highest at the top
  */
 function sortList(){
-    var list=document.getElementById("mainlist");
-    var rawList = list.childNodes;
-    var trimmedList = filterList(rawList, "LI");
-    bubbleSort(trimmedList);
+    var trimmedList = $("#mainlist").find("li").get();
+    //bubbleSort(trimmedList);
+    var sortedList = insertionSort(trimmedList, trimmedList.length);
+    replaceChildren(sortedList);
     moveStyleTop();styleReorder(true);
 }
 
@@ -623,9 +562,7 @@ function getValidName(isHero, base=null){
  * @returns {int} the number of creatures in the list
  */
 function countCreatures(){
-    var mama = document.getElementById("mainlist");
-    var allCreatures = filterList(mama.childNodes, "LI");
-    return allCreatures.length;
+    return $("#mainlist").find("li").get().length;
 }
 
 /**
@@ -648,7 +585,7 @@ function tooManyCr(){
  */
 function styleReorder(removeStyle=false){
     var name = "empha";
-    var el = document.getElementById("reorder");
+    var el = $("#reorder").get(0);
     if(removeStyle){
         el.classList.remove(name);
     }
@@ -660,7 +597,7 @@ function styleReorder(removeStyle=false){
  * @param {int} init the initiative of the hero
  * @param {string} name the name of the hero
  */
-function addHero(init=0, name=null){
+function addHero(init=-1, name=null){
     if(tooManyCr()){return;}
     if(name == null || !nameIsFree(name)){
         heroName=getValidName(true, name);}
@@ -674,6 +611,7 @@ function addHero(init=0, name=null){
     var delShowing = !document.getElementById("genocide").hidden;
     var hiddenStr = ""
     if(!delShowing){hiddenStr=' hidden="true" ';}
+
     var insideTxt = '<span id="initiative'+heroName+
     '" class="init" onclick="newInit(this)">'+init+
     '</span><span id="'+heroName+
@@ -682,11 +620,10 @@ function addHero(init=0, name=null){
     +hiddenStr+'>del</button>'
 
     var el = newElem('li', insideTxt, true);
-    el.setAttributeNode(newAtt("name", heroName));
-    el.id=init;
+    $(el).attr("name", heroName);
+    $(el).attr("id", init);
 
-    var listParent = document.getElementById("mainlist");
-    listParent.insertBefore(el, listParent.childNodes[0]);
+    $("#mainlist").prepend(el);
     
     moveStyleTop();clearErrors();styleReorder()
 }
@@ -743,8 +680,7 @@ function addEnemy(init=null, name=null, hp=null){
 
     var el = getNewEnemy(init, name, hp);
     if(el==null){return;}
-    var listParent = document.getElementById("mainlist");
-    listParent.insertBefore(el, listParent.childNodes[0]);
+    $("#mainlist").prepend(el);
     moveStyleTop();clearErrors();styleReorder();
 }
 
@@ -752,7 +688,7 @@ function addEnemy(init=null, name=null, hp=null){
  * XXX
  */
 function getCurrCr(){
-    return document.getElementsByClassName("currInit")[0];
+    return $(".currInit").get(0);
 }
 
 /**
@@ -779,12 +715,11 @@ function killEveryone(){
         return;
     }
     alert("you monster...");
-    var allMother = document.getElementById("mainlist");
-    var allChildren = filterList(allMother.childNodes, "LI");
+    var allChildren = $("#mainlist").find("li").get();
     for(x in allChildren){
         removeCreature(allChildren[x].childNodes[0]);}
     toggleDelete();
-}//branch test
+}
 
 /**
  * changes whether the user can see the delete buttons
@@ -808,11 +743,9 @@ function clearNewCr(elToClear=null){
     if(elToClear!=null){
         elToClear.value="";return;}
 
-    if(!document.getElementById("clearInputs").checked){
+    if(!$("#clearInputs").prop("checked")){
         return;}
-    document.getElementById("newHp").value="";
-    document.getElementById("newName").value="";
-    document.getElementById("newInit").value="";
+    $("#inputBoxes input").val("");
 }
 
 /**
@@ -820,9 +753,9 @@ function clearNewCr(elToClear=null){
  * based on text fields
  */
 function constructCr(){
-    var crName=document.getElementById("newName").value;
-    var init=document.getElementById("newInit").value;
-    var hp=document.getElementById("newHp").value;
+    var crName= $("#newName").val();
+    var init= $("#newInit").val();
+    var hp= $("#newHp").val();
     if(!isInt(init)){init=null;}
     if(!isInt(hp)){hp=null;}
 
@@ -843,7 +776,7 @@ function constructCr(){
  * red if they are low on health
  */
 function makeRedDel(parent, undo=false){
-    var butt=filterList(parent.childNodes, "BUTTON")[0];
+    var butt = $(parent).find("button").get(0);
     butt.hidden=false;
     butt.id="closetodeath";
     if(undo){
@@ -858,11 +791,13 @@ function makeRedDel(parent, undo=false){
  * @param {boolean} resetRound if true round set to 1
  */
 function incrementRound(resetRound=false){
-    var el=document.getElementById("round");
-    var curRound = parseInt(el.innerHTML);
+    //var el=document.getElementById("round");
+    //var curRound = parseInt(el.innerHTML);
+    var el = $("#round").get(0);
+    var curRound = parseInt($(el).text());
     if(resetRound){
         moveStyleTop();
-        if(el.innerHTML==1){
+        if(curRound==1){
             errorTxt("round already reset");}
         el.innerHTML = 1;}
     else{
@@ -880,9 +815,10 @@ function startingPregens(){
     for(x in allKeys){
         var key = allKeys[x];
         createPregenButton(key);
-        var el = document.getElementById(key);
+
         if(shouldMakeButts){
-            addFromPregen(el.childNodes[0]);}
+           addFromPregen(null, key);
+        }
     }
 }
 
@@ -921,8 +857,10 @@ function getPregenKeys(base="pregen"){
  * adds a creature from a pregen to the main list
  * @param {HTMLelement} elem the element to be added
  */
-function addFromPregen(elem){
-    var key = elem.parentNode.id;
+function addFromPregen(elem, key=-1){
+    if (key == -1){
+        var key = elem.parentNode.id;
+    }
 
     var contents = localStorage.getItem(key).split(";");
     var init = contents[0];
@@ -961,9 +899,9 @@ function pregenIsRedundant(name){
  */
 function savePregen(){
 
-    var init = document.getElementById("newInit").value;
-    var name = document.getElementById("newName").value;
-    var hp = document.getElementById("newHp").value;
+    var init = $("#newInit").val();
+    var name = $("#newName").val();
+    var hp = $("#newHp").val();
     if(pregenIsRedundant(name)){
         errorTxt("name is taken");
         return;}
@@ -977,9 +915,9 @@ function savePregen(){
     localStorage.setItem(key, info);
 
     createPregenButton(key);
-
-    document.getElementById("showPregens").checked=true;
-    togglePregens(document.getElementById("showPregens"));
+        
+    $("#showPregens").get(0).checked=true;
+    togglePregens(true);
 }
 
 /**
@@ -993,7 +931,7 @@ function createPregenButton(key){
     var name = contents[1];
     var hp = contents[2];
     var isHero = isAHero(init, hp);
-    var mamaNode = document.getElementById("pregens");
+    var mamaNode = $("#pregens").get(0);
     if(isHero){
         var innerStr = '<span onclick = "newInit(this)">'
         +init+'</span>'+" <span id='' onclick=rename(this)>"
@@ -1010,7 +948,7 @@ function createPregenButton(key){
         var newEl = newElem("div", innerStr, true);
     }
     newEl.id=key;
-    mamaNode.insertBefore(newEl, mamaNode.childNodes[0]);
+    $(mamaNode).prepend(newEl);
 }
 
 /**
@@ -1037,23 +975,27 @@ function updatePregen(key, init, name, hp){
 function removePregen(node){
     var key = node.parentNode.id;
     localStorage.removeItem(key);
-    var oneToDie = document.getElementById(key);
-    if(oneToDie != null){
-        oneToDie.parentNode.removeChild(oneToDie);}
+    $("#"+key).remove();
 }
 
 /**
- * checks if the checkbox passed in is checked
- * and making pregens visible if it is,
- * otherwise they are hidden
- * @param {HTMLelement} checkBox the box to check
+ * changes visibility of pregens
+ * @param {int or bool} manualSet if blank/-1 will toggle pregen, if bool will
+ * show pregens if true, otherwise false
  */
-function togglePregens(checkBox){
-    el = document.getElementsByClassName("allpregens")[0];
-    if(checkBox.checked){
-        el.hidden=false;}
+function togglePregens(manualSet=-1){
+    if(manualSet==-1){
+        $(".allpregens").toggle();
+    }
     else{
-        el.hidden=true;}
+        if(manualSet){
+            $(".allpregens").show();
+        }
+        else{
+            $(".allpregens").hide();
+        }
+        
+    }
 }
 
 /**
@@ -1081,19 +1023,16 @@ function initializeChars(){
         case "false":
             return false;
         default:
-            debug("ERROR, something went wrong when accessing"+
+            console.log("ERROR, something went wrong when accessing"+
             " local storage, try clearing it to fix problem");
     }
 }
 
 /**
- * looks at a checkbox and makes name generator window
- * hidden if it isn't checked and vice versa
- * @param {HTMLElement} el the checkbox being checked
+ * hides name generator it it is hidden and vice versa
  */
-function toggleNameGen(el){
-    var nameGenerator= document.getElementById("hideNameGen");
-    nameGenerator.hidden = !el.checked;
+function toggleNameGen(){
+    $("#hideNameGen").toggle();
 }
 
 /**

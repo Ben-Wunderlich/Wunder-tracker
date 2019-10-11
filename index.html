@@ -4,6 +4,7 @@
     <title>roll it!</title>
     <link rel="icon" href="backEnd/d20fav.ico">
     <link rel="stylesheet" href="backEnd/init_style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
 <div id="initTracker">
@@ -26,15 +27,17 @@
 
 <br>
 <span id="newCr">
-    <input type="text" id="newInit" placeholder="initiative" size="3" onkeypress="if(event.keyCode == 13){constructCr();}">
-    <input type="text" id="newName" placeholder="name" size="8" onkeypress="if(event.keyCode == 13){constructCr();}">
-    <input type="text" id="newHp" placeholder="health" size="2" onkeypress="if(event.keyCode == 13){constructCr();}">
+    <span id="inputBoxes">
+        <input type="text" id="newInit" placeholder="initiative" size="3" onkeypress="if(event.keyCode == 13){constructCr();}">
+        <input type="text" id="newName" placeholder="name" size="8" onkeypress="if(event.keyCode == 13){constructCr();}">
+        <input type="text" id="newHp" placeholder="health" size="2" onkeypress="if(event.keyCode == 13){constructCr();}">
+    </span>
     <button onclick="constructCr()">make creature</button>
     <button onclick="savePregen()">save</button>
     
     <br><input type="checkbox" id="showPregens" onclick="togglePregens(this)">show pregens    
     <input type="checkbox" id="initialize" onclick="toggleInitialize(this)">initialize creatures 
-    <input type="checkbox" onclick="toggleNameGen(this)">nameGenerator?
+    <input type="checkbox" onclick="toggleNameGen()">nameGenerator?
 </span>
 
 <span class=allpregens hidden="true">
@@ -44,12 +47,10 @@
 
 <h3 id="roundheader">
     <span>round </span><span id="round">1</span>
-    <button onclick="sortList()" id="reorder">reorder</button>
+    <button onclick="sortList()" id="reorder">reorder</button> <div id="holder"><p id="error"></p></div>
 </h3>
 
 <ol id="mainlist"></ol>
-
-<div id="holder"><p id="error"></p></div>
 
 <br><p id="debug"></p></div>
 
