@@ -9,9 +9,7 @@ startingSetup();
  */
 function startingSetup(){
    startingPregens();
-
-    document.getElementById("initialize").checked=initializeChars();
-    
+    $("#initialize").prop("checked", initializeChars());
     loadSavedRolls();
     styleReorder(true);
 }
@@ -31,18 +29,6 @@ function newElem(type, value, setInner=false){
     else{
         newEl.value = value;}
     return newEl;
-}
-
-/**
- * creates new attribute with an initial value
- * @param {str} type the type of attribute, must be all caps
- * @param {string} value the value assigned to the attribute
- * @returns {HTMLobject} the attribute
- */
-function newAtt(type, value){
-    var att=document.createAttribute(type);
-    att.value=value;
-    return att;
 }
 
 /**
@@ -106,7 +92,7 @@ function errorWiggle(elem){
  * @param {string} id alternative element
  */
 function errorTxt(text, id="error"){
-    var target = document.getElementById(id);
+    var target = $("#"+id);
     if(target.innerHTML == text){//if error already being shown
         errorWiggle(target);
     }
@@ -117,8 +103,8 @@ function errorTxt(text, id="error"){
  * sets the errorText element to ""
  */
 function clearErrors(){
-    document.getElementById("error").innerHTML="";
-    document.getElementById("rollError").innerHTML="";
+    $("#error").html="";
+    $("#rollError").html="";
 }
 
 /**
@@ -158,7 +144,7 @@ function nameTooLong(el){
  * @param {HTMLElement} el the element to be renamed
  */
 function rename(el){
-
+    console.log(el.innerHTML);
     var newEl = newElem("input", el.innerHTML);
     newEl.name = el.innerHTML;
 
@@ -320,7 +306,6 @@ function setMaxHp(el){
     if(newMax <= 0){newMax=1;}
 
     newEl = newElem("span", "/"+newMax+" hp", true);
-    //newEl.setAttributeNode(newAtt("onclick", "changeMaxHp(this)"));
     $(newEl).attr("onclick", "changeMaxHp(this)");
 
     //var name = el.parentNode.getAttribute("name");
@@ -444,6 +429,10 @@ function filterList(list, type){
     return properList;
 }
 
+/**
+ * gets the integer value of the id attribute
+ * @param {HTMLElement} el
+ */
 function elNum(el){
     return parseInt(el.id);
 }
@@ -518,7 +507,6 @@ function moveStyleTop(){
     if($("#mainlist").find("li").get().length > 0){
         $("#mainlist").find("li").first().attr("class", "currInit");
     }
-    //childs[0].setAttributeNode(newAtt("class", "currInit"));
 }
 
 /**
@@ -649,7 +637,7 @@ function getNewEnemy(init, enNom, hp){
         ALL_NAMES.push(enNom);
     var el = newElem('li', enNom, true);
     el.id=init;
-    el.setAttributeNode(newAtt("name", enNom));
+    $(el).attr("name", enNom);
     var delShowing = !document.getElementById("genocide").hidden;
     var hiddenStr = "";
     if(!delShowing){hiddenStr=' hidden="true" ';}
@@ -685,7 +673,7 @@ function addEnemy(init=null, name=null, hp=null){
 }
 
 /**
- * XXX
+ * @returns {HTMLElement} the creature currently highlighted
  */
 function getCurrCr(){
     return $(".currInit").get(0);
@@ -715,9 +703,7 @@ function killEveryone(){
         return;
     }
     alert("you monster...");
-    var allChildren = $("#mainlist").find("li").get();
-    for(x in allChildren){
-        removeCreature(allChildren[x].childNodes[0]);}
+    $("#mainlist").empty();
     toggleDelete();
 }
 
@@ -726,7 +712,7 @@ function killEveryone(){
  * for each creature and genocide button
  */
 function toggleDelete(){
-    var delButts = document.getElementsByClassName("del");
+    var delButts = $(".del").get();
     var doReveal = !delButts[0].hidden;
   
     for(x in delButts){
