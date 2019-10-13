@@ -1,17 +1,68 @@
 var ALL_NAMES =["", " "];
 var DEFAULT_HP = 20
-var MAX_LENGTH = 30;
-
-startingSetup();
+var MAX_LENGTH = 25;
 
 /**
  * creates all the pregens in storage if chosen in storage
  */
 function startingSetup(){
-   startingPregens();
-    $("#initialize").prop("checked", initializeChars());
+    startingPregens();
     loadSavedRolls();
-    styleReorder(true);
+    sortReminder(true);
+    initCheckBoxes();
+}
+
+/**
+ * stores the user preference for whether to initialize pregens
+ * @param {HTMLElement} el the checkbox being toggled
+ */
+function saveCheckbox(el){
+    localStorage.setItem($(el).attr("id"), $(el).prop("checked"));
+}
+
+/**
+ * handles events associated with checking/unchecking some boxes during startup
+ * @param {HTMLElement} el the checkbox element
+ * @param {boolean} isChecked whether is is checked or unchecked(checked if true)
+ */
+function checkboxReprecussions(el, isChecked){
+    switch($(el).attr("id")){
+        case "nameGenBox":
+            toggleNameGen(isChecked);return;
+        case "showPregens":
+            generalToggle(".allpregens", isChecked);return;
+        case "showSavedRolls":
+            generalToggle("#savedRolls", isChecked);return;
+     }
+}
+
+/**
+ * initializes check boxes being checked based on localstorage during startup
+ */
+function initCheckBoxes(){
+    var allInps = $("input").get();
+    for (el of allInps){
+        if($(el).attr("type") == "checkbox"){
+            var beChecked = boolFromStorage($(el).attr("id"));
+            $(el).prop("checked", beChecked);
+            checkboxReprecussions(el, beChecked);
+        }
+    }
+}
+
+/**
+ * togges an element on or off based on selector and bool
+ * if bool is null it will just make it opposite, else it will use bool
+ * if true, will be shown, else will hide
+ * @param {string} selector the jquery selector to find the element
+ * @param {boolean} shouldShow whether element(s) should be shown or hidden
+ */
+function generalToggle(selector, shouldShow=null){
+    if(shouldShow != null){
+        $(selector).toggle(shouldShow);
+        return;
+    }
+    $(selector).toggle();
 }
 
 /**
@@ -92,19 +143,18 @@ function errorWiggle(elem){
  * @param {string} id alternative element
  */
 function errorTxt(text, id="error"){
-    var target = $("#"+id);
+    var target = $("#"+id).get(0);
     if(target.innerHTML == text){//if error already being shown
         errorWiggle(target);
     }
-    target.innerHTML = text;
+    else{$(target).text(text);}
 }
 
 /**
  * sets the errorText element to ""
  */
 function clearErrors(){
-    $("#error").html="";
-    $("#rollError").html="";
+    $(".genError").text("");
 }
 
 /**
@@ -132,7 +182,8 @@ function replaceName(oldName, newName){
  * @returns {boolean} true if it is too long, else false
  */
 function nameTooLong(el){
-    var len = $(el.parentNode).attr("name").length;
+    var len = $(el).val().length;
+    console.log(len);
     if(len > MAX_LENGTH){
         return true;
     }
@@ -144,7 +195,6 @@ function nameTooLong(el){
  * @param {HTMLElement} el the element to be renamed
  */
 function rename(el){
-    console.log(el.innerHTML);
     var newEl = newElem("input", el.innerHTML);
     newEl.name = el.innerHTML;
 
@@ -188,23 +238,24 @@ function isListElement(el){
  */
 function setName(elem){
     var newName = elem.value;
-    var oldName = elem.name;
+    var oldName = $(elem).attr("name"); //$(elem).parent().attr("id");
+    var removeErrors = true;
 
     if(!nameIsFree(newName, oldName)){
         newName=oldName;
-        errorTxt("name already taken");}
+        errorTxt("name already taken");
+        removeErrors=false;}
     
     if(nameTooLong(elem)){
         errorTxt("name is too long");
         newName = oldName;
-    }else{clearErrors();}
+        removeErrors=false;}
+    
+    if(removeErrors){clearErrors();}
 
     newEl = newElem("span", newName, true);
-    newEl.id=newName;
     if(isListElement(elem)){
-        $(elem.parentNode).attr("name", newName);
-        $("#initiative"+oldName).attr("initiative"+newName);
-        $(newEl).attr("class", "name");
+        $(elem.parentNode).attr("id", newName);
     }
     else{
         updatePregen(elem.parentNode.id, null,newName,null);
@@ -263,22 +314,25 @@ function newInit(el){
  */
 function setInit(elem){
     var newInit = elem.value;
+    var removeErrors=true;
     if(!isInt(newInit)){
         newInit=elem.name;
+        removeErrors=false;
         errorTxt("initiative must be a number");}
     
     newEl = newElem("span", newInit, true);
-    newEl.id=elem.id;
     $(newEl).addClass("init");
     $(newEl).attr("onclick", "newInit(this)");
 
     if(!isListElement(elem)){
         updatePregen(elem.parentNode.id, newInit,null,null);
     }
-    else{elem.parentNode.id=newInit;}//update list item id(for sorting)
+    //else{elem.parentNode.=newInit;}//update list item id(for sorting)
+    else{$(elem).parent().attr("name", newInit);}
 
     elem.parentElement.replaceChild(newEl, elem);
-    clearErrors();styleReorder()
+    if(removeErrors){clearErrors();}
+    sortReminder();
 }
 
 /**
@@ -326,7 +380,6 @@ function changeHp(el){
     var curHp = el.innerHTML.split("/")[0];
     var newEl = newElem("input", curHp);
     newEl.name = curHp;
-    newEl.id = el.id;
 
     $(newEl).attr("onkeypress", "if(event.keyCode == 13){setHp(this);}");
     $(newEl).attr("size", "1");
@@ -342,7 +395,7 @@ function changeHp(el){
 function setHp(elem){
     var newHp = elem.value;
     var wasAdded = newHp.indexOf("+") > -1;
-    var plzCleanErrors = false;
+    var removeErrors = true;
 
     newHp = evalStr(newHp, elem.name, "health must be a number");
 
@@ -351,14 +404,13 @@ function setHp(elem){
     if(newHp > maxHP && wasAdded){
         var hpDiff = newHp - maxHP;
         errorTxt("healed an excess of "+hpDiff+" points");
-        plzCleanErrors = true;
+        removeErrors = false;
         newHp = maxHP;}
 
     if(!isListElement(elem)){
         updatePregen(elem.parentNode.id, null,null,newHp);
     }
     newEl = newElem("span", newHp, true);
-    newEl.id=elem.id;
     $(newEl).addClass("hp");
     $(newEl).attr("onclick", "changeHp(this)");
 
@@ -368,8 +420,7 @@ function setHp(elem){
         else{makeRedDel(elem.parentElement, true);}//gets rid of button
     }
     elem.parentElement.replaceChild(newEl, elem);
-    if(!plzCleanErrors){
-        clearErrors();}
+    if(removeErrors){clearErrors();}
 }
 
 /**
@@ -434,7 +485,7 @@ function filterList(list, type){
  * @param {HTMLElement} el
  */
 function elNum(el){
-    return parseInt(el.id);
+    return parseInt($(el).attr("name"));
 }
 
 function insertionSort(arr, n){
@@ -481,6 +532,7 @@ function rotate(){
         incrementRound();}
 
     $(childs[newInd]).addClass("currInit");
+    clearErrors();
 }
 
 /**
@@ -519,7 +571,7 @@ function sortList(){
     //bubbleSort(trimmedList);
     var sortedList = insertionSort(trimmedList, trimmedList.length);
     replaceChildren(sortedList);
-    moveStyleTop();styleReorder(true);
+    moveStyleTop();sortReminder(true);
 }
 
 /**
@@ -569,9 +621,9 @@ function tooManyCr(){
 }
 
 /**
- * XXXmake it so removed when reordered
+ * adds effect to 'reorder' button to remind user to sort the initiative again
  */
-function styleReorder(removeStyle=false){
+function sortReminder(removeStyle=false){
     var name = "empha";
     var el = $("#reorder").get(0);
     if(removeStyle){
@@ -600,20 +652,17 @@ function addHero(init=-1, name=null){
     var hiddenStr = ""
     if(!delShowing){hiddenStr=' hidden="true" ';}
 
-    var insideTxt = '<span id="initiative'+heroName+
-    '" class="init" onclick="newInit(this)">'+init+
-    '</span><span id="'+heroName+
-    '" onclick="rename(this)" class="name">'+heroName+
-    '</span><button onclick="removeCreature(this)" class="del"'
-    +hiddenStr+'>del</button>'
+    var insideTxt = '<span class="init" onclick="newInit(this)">'+init+'</span>'
+    +'<span class="name" onclick="rename(this)">'+heroName+'</span>'
+    +'<button class="del"'+hiddenStr+'onclick="removeCreature(this)" >del</button>'
 
     var el = newElem('li', insideTxt, true);
-    $(el).attr("name", heroName);
-    $(el).attr("id", init);
+    $(el).attr("name", init);
+    $(el).attr("id", heroName);
 
     $("#mainlist").prepend(el);
     
-    moveStyleTop();clearErrors();styleReorder()
+    moveStyleTop();clearErrors();sortReminder()
 }
 
 /**
@@ -636,20 +685,18 @@ function getNewEnemy(init, enNom, hp){
     }
         ALL_NAMES.push(enNom);
     var el = newElem('li', enNom, true);
-    el.id=init;
-    $(el).attr("name", enNom);
+    el.id=enNom;
+    $(el).attr("name", init);
+
     var delShowing = !document.getElementById("genocide").hidden;
     var hiddenStr = "";
     if(!delShowing){hiddenStr=' hidden="true" ';}
 
-    var insideTxt = '<span id="initiative'+enNom+
-    '" onclick="newInit(this)" class="init">'+init+'</span><span id="'
-    +enNom+'" onclick="rename(this)" class="name">'
-    +enNom+'</span><span id="hp'+enNom+
-    '" onclick="changeHp(this)" class="hp">'+hp+
-    "</span><span onclick='changeMaxHp(this)'>/"+hp+" hp"+
-    '</span><button onclick="removeCreature(this)" class="del"'
-    +hiddenStr+'">del</button>';
+    var insideTxt = '<span onclick="newInit(this)" class="init">'+init+'</span>'+
+    '<span onclick="rename(this)" class="name">'+enNom+'</span>'+
+    '<span onclick="changeHp(this)" class="hp">'+hp+'</span>'+
+    '<span onclick="changeMaxHp(this)">/'+hp+" hp"+'</span>'+
+    '<button onclick="removeCreature(this)" class="del"'+hiddenStr+'">del</button>';
 
     el.innerHTML = insideTxt;
     return el;
@@ -663,13 +710,13 @@ function getNewEnemy(init, enNom, hp){
  */
 function addEnemy(init=null, name=null, hp=null){
     if(tooManyCr()){return;}
-    if(init==null || !isInt(init)){init=getRoll();}
+    if(init==null || !isInt(init)){init=get_rand(1,20);}
     if(hp==null){hp=DEFAULT_HP;}
 
     var el = getNewEnemy(init, name, hp);
     if(el==null){return;}
     $("#mainlist").prepend(el);
-    moveStyleTop();clearErrors();styleReorder();
+    moveStyleTop();/*clearErrors();*/sortReminder();
 }
 
 /**
@@ -723,12 +770,8 @@ function toggleDelete(){
 
 /**
  * clears all inputs where user enters creature data
- * XXX@param
  */
-function clearNewCr(elToClear=null){
-    if(elToClear!=null){
-        elToClear.value="";return;}
-
+function clearNewCr(){
     if(!$("#clearInputs").prop("checked")){
         return;}
     $("#inputBoxes input").val("");
@@ -772,6 +815,18 @@ function makeRedDel(parent, undo=false){
 }
 
 /**
+ * determines whether or not reseting the round will change anything
+ * returns true if nothing will change or false if something will change
+ * @param {int} curRound the current round
+ */
+function futileReset(curRound){
+    if(curRound>1){
+        return false;
+    }
+    return $("#mainlist").children().get(0).className == "currInit";
+}
+
+/**
  * increments the counter that keeps track of
  * which round it is, or changes it back to 1
  * @param {boolean} resetRound if true round set to 1
@@ -782,10 +837,10 @@ function incrementRound(resetRound=false){
     var el = $("#round").get(0);
     var curRound = parseInt($(el).text());
     if(resetRound){
-        moveStyleTop();
-        if(curRound==1){
+        if(futileReset(curRound)){
             errorTxt("round already reset");}
-        el.innerHTML = 1;}
+        moveStyleTop();
+        $(el).html(1);}
     else{
         el.innerHTML = curRound+1;
         clearErrors();}
@@ -797,7 +852,7 @@ function incrementRound(resetRound=false){
  */
 function startingPregens(){
     var allKeys = getPregenKeys();
-    var shouldMakeButts = initializeChars();
+    var shouldMakeButts = boolFromStorage("initialize");
     for(x in allKeys){
         var key = allKeys[x];
         createPregenButton(key);
@@ -891,7 +946,8 @@ function savePregen(){
     if(pregenIsRedundant(name)){
         errorTxt("name is taken");
         return;}
-    if((init+name+hp).length > MAX_LENGTH){
+    
+    if(init+name+hp > MAX_LENGTH){
         errorTxt("name is too long");return;}
     
     clearErrors();
@@ -919,18 +975,18 @@ function createPregenButton(key){
     var isHero = isAHero(init, hp);
     var mamaNode = $("#pregens").get(0);
     if(isHero){
-        var innerStr = '<span onclick = "newInit(this)">'
-        +init+'</span>'+" <span id='' onclick=rename(this)>"
-        +name+'</span></span><button onclick="addFromPregen(this)">'+
-        'create</button><button onclick="removePregen(this)">destroy</button>'
+        var innerStr = '<span onclick = "newInit(this)">'+init+'</span>'
+        +' <span id="" onclick=rename(this)>'+name+'</span>'+
+        '<button onclick="addFromPregen(this)">'+'create</button>'+
+        '<button onclick="removePregen(this)">destroy</button>'
         var newEl = newElem("div", innerStr, true);
     }
     else{
-        var innerStr = '<span onclick = "newInit(this)">'
-        +init+"</span> <span id='' onclick=rename(this)>"
-        +name+'</span><span onclick = "changeHp(this)"> '+hp+
-        '</span><button onclick="addFromPregen(this)">'+
-        'create</button><button onclick="removePregen(this)">destroy</button>'
+        var innerStr = '<span onclick = "newInit(this)">'+init+'</span>'
+        +'<span id="" onclick=rename(this)>'+name+'</span>'+
+        '<span onclick = "changeHp(this)"> '+hp+'</span>'+
+        '<button onclick="addFromPregen(this)">'+'create</button>'+
+        '<button onclick="removePregen(this)">destroy</button>'
         var newEl = newElem("div", innerStr, true);
     }
     newEl.id=key;
@@ -969,30 +1025,8 @@ function removePregen(node){
  * @param {int or bool} manualSet if blank/-1 will toggle pregen, if bool will
  * show pregens if true, otherwise false
  */
-function togglePregens(manualSet=-1){
-    if(manualSet==-1){
-        $(".allpregens").toggle();
-    }
-    else{
-        if(manualSet){
-            $(".allpregens").show();
-        }
-        else{
-            $(".allpregens").hide();
-        }
-        
-    }
-}
-
-/**
- * stores the user preference for whether to initialize pregens
- * @param {HTMLElement} el the checkbox being toggled
- */
-function toggleInitialize(el){
-    if(el.checked){
-        localStorage.setItem("initializing", true);}
-    else{
-        localStorage.setItem("initializing", false);}
+function togglePregens(manualSet=null){
+    generalToggle(".allpregens", manualSet)
 }
 
 /**
@@ -1000,9 +1034,9 @@ function toggleInitialize(el){
  * be initialized, it is true by default
  * @returns {boolean} true if pregens should be made
  */
-function initializeChars(){
-    var shouldMake = localStorage.getItem("initializing");
-    switch(shouldMake){
+function boolFromStorage(key){
+    var item = localStorage.getItem(key);
+    switch(item){
         case null:
         case "true":
             return true;//true by default
@@ -1017,8 +1051,8 @@ function initializeChars(){
 /**
  * hides name generator it it is hidden and vice versa
  */
-function toggleNameGen(){
-    $("#hideNameGen").toggle();
+function toggleNameGen(shouldShow=null){
+    generalToggle("#hideNameGen", shouldShow);
 }
 
 /**
@@ -1064,3 +1098,5 @@ function rickRoll(el){
     window.open(link, '_blank');
     el.innerHTML=changeTo;
 }
+
+startingSetup();
