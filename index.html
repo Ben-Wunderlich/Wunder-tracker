@@ -20,24 +20,24 @@
 
 <div id="botbutts">
     <button onclick="rotate()">next turn</button>
-    <input type="checkbox" id="clearInputs" onclick="clearNewCr()">
+    <input type="checkbox" id="clearInputs" onclick="clearNewCr();saveCheckbox(this)">
     <span>clear inputs?</span>
     <button onclick="incrementRound(true)">reset round</button>
 </div>
 
 <br>
 <span id="newCr">
-    <span id="inputBoxes">
-        <input type="text" id="newInit" placeholder="initiative" size="3" onkeypress="if(event.keyCode == 13){constructCr();}">
-        <input type="text" id="newName" placeholder="name" size="8" onkeypress="if(event.keyCode == 13){constructCr();}">
-        <input type="text" id="newHp" placeholder="health" size="2" onkeypress="if(event.keyCode == 13){constructCr();}">
+    <span id="inputBoxes" onkeypress="if(event.keyCode == 13){constructCr();}">
+        <input type="text" id="newInit" placeholder="initiative" size="3">
+        <input type="text" id="newName" placeholder="name" size="8">
+        <input type="text" id="newHp" placeholder="health" size="2">
     </span>
     <button onclick="constructCr()">make creature</button>
     <button onclick="savePregen()">save</button>
     
-    <br><input type="checkbox" id="showPregens" onclick="togglePregens(this)">show pregens    
-    <input type="checkbox" id="initialize" onclick="toggleInitialize(this)">initialize creatures 
-    <input type="checkbox" onclick="toggleNameGen()">nameGenerator?
+    <br><input type="checkbox" id="showPregens" onclick="togglePregens();saveCheckbox(this)">show pregens    
+    <input type="checkbox" id="initialize" onclick="saveCheckbox(this)">initialize creatures 
+    <input type="checkbox" id="nameGenBox" onclick="toggleNameGen();saveCheckbox(this)">nameGenerator?
 </span>
 
 <span class=allpregens hidden="true">
@@ -47,7 +47,8 @@
 
 <h3 id="roundheader">
     <span>round </span><span id="round">1</span>
-    <button onclick="sortList()" id="reorder">reorder</button> <div id="holder"><p id="error"></p></div>
+    <button onclick="sortList()" id="reorder">reorder</button>
+    <div id="holder"><p id="error" class="genError"></p></div>
 </h3>
 
 <ol id="mainlist"></ol>
@@ -56,40 +57,41 @@
 
 
 <div id="diceroller" draggable="true">
-<span id=errHold><div id="rollError"></div></span>
-<div id="roller_gui">
-<h3>enter dice here</h3>
-<input id="input" type="text" name="dies" size="10"
-onkeypress="if(event.keyCode == 13){process_result();}"
-    placeholder="3d4+3"><button onclick="saveDieRoll()">save me</button>
-<br><span id="output"></span><br>
+    <span id=errHold><div id="rollError" class="genError"></div></span>
+    <div id="roller_gui">
+        <h3>enter dice here</h3>
+        <input id="input" type="text" name="dies" size="10"
+        onkeypress="if(event.keyCode == 13){process_result();}"
+            placeholder="3d4+3"><button onclick="saveDieRoll()">save me</button>
+        <br><div id="output"></div><br>
 
-<input type="checkbox" id="show_rolls"
-    checked=true>show rolls
-<input type="checkbox" id="show_stats"
-    checked=true>show stats
+        <input type="checkbox" id="show_rolls" onclick="saveCheckbox(this)"
+            checked=true>show rolls
+        <input type="checkbox" id="show_stats" onclick="saveCheckbox(this)"
+            checked=true>show stats
 
-<br><input type="checkbox" id="showSavedRolls"
- onclick="toggleSavedRolls(this)" checked="true">
-show saved rolls
-<br>
+        <br><input type="checkbox" id="showSavedRolls"
+        onclick="toggleSavedRolls(this);saveCheckbox(this)" checked="true">
+        show saved rolls
+        <br>
 
-<h4><button onclick="process_result()">roll it</button>
-</h4>
-<div id = "savedRolls"></div>
-</div>
+        <h4><button onclick="process_result()">roll it</button></h4>
 
-<div id="roll_display">
-    <p id="rolls"></p>
-    <h3 id="stat_head"></h3>
-    <p id="stats"></p>
-    <h5 id="debug"></h5>
-</div>
+        <div id = "savedRolls"></div>
+    </div>
+
+    <div id="roll_display">
+        <p id="rolls"></p>
+        <h3 id="stat_head"></h3>
+        <p id="stats"></p>
+        <h5 id="debug"></h5>
+    </div>
 </div>
 
 <span id="hideNameGen" hidden>
-<iframe id="nameGen" src="https://www.fantasynamegenerators.com/celtic-breton-names.php"
-></iframe></span>
+    <iframe id="nameGen" src="https://www.fantasynamegenerators.com/celtic-breton-names.php"
+    ></iframe>
+</span>
 <p onclick="rickRoll(this)" id="rickRoll">secrets</p>
 
 <script src="backEnd/dice_rolling.js"></script>
