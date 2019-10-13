@@ -41,8 +41,8 @@ button{
 }
 
 #holder{
-    top: -40px;
-    left: 170px;
+    top: -145px;
+    left: 160px;
     width: 200px;
     position: relative;
 
@@ -106,7 +106,7 @@ button{
 #mainlist{
     font-size: 20px;
 }
-#roundheader{
+#{
     text-decoration: underline;
 }
 #genocide{

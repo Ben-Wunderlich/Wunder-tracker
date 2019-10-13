@@ -19,10 +19,8 @@
 </div><br><br>
 
 <div id="botbutts">
-    <button onclick="rotate()">next turn</button>
     <input type="checkbox" id="clearInputs" onclick="clearNewCr();saveCheckbox(this)">
     <span>clear inputs?</span>
-    <button onclick="incrementRound(true)">reset round</button>
 </div>
 
 <br>
@@ -45,8 +43,10 @@
 <div id="pregens">
 </div></span>
 
-<h3 id="roundheader">
-    <span>round </span><span id="round">1</span>
+<h3>
+    <span id="roundheader">round </span><span id="round">1</span>
+    <button onclick="rotate()">next turn</button>
+    <button onclick="incrementRound(true)">reset round</button>
     <button onclick="sortList()" id="reorder">reorder</button>
     <div id="holder"><p id="error" class="genError"></p></div>
 </h3>
