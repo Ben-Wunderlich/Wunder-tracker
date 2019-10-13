@@ -41,10 +41,11 @@ button{
 }
 
 #holder{
-    position: absolute;
-    top: 215px;
-    left: 150px;
+    top: -40px;
+    left: 170px;
     width: 200px;
+    position: relative;
+
 }
 
 #error{
@@ -90,6 +91,14 @@ button{
 #output{
     font-weight: bold;
     font-size: 14pt;
+    position: relative;
+    top: 12px;
+    font-style: italic;
+    text-shadow:
+    -1px -1px 0 #4ac2b0,
+    1px -1px 0 #4ac2b0,
+    -1px 1px 0 #4ac2b0,
+    1px 1px 0 #4ac2b0;
 }
 #rolls{
     font-style: italic;
@@ -129,15 +138,15 @@ button{
     padding: 5px;
 }
 #rollError{
-    position: absolute;
-    color: blue;
-    padding: 4px;
+    position: relative;
+    color: #72bfd6;
+    padding: 5px;
 
     text-shadow:
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
+    -1px -1px 0 #82160a,
+    1px -1px 0 #82160a,
+    -1px 1px 0 #82160a,
+    1px 1px 0 #82160a;
     top: 25px;
 }
 
@@ -147,8 +156,8 @@ button{
 
 #nameGen{
     position: absolute;
-    left: 40%;
-    top: 30px;
+    left: 525px;
+    top: 50px;
     width: 350px;
     height: 450px;
     resize: vertical;

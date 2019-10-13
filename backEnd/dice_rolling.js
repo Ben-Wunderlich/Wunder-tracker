@@ -3,7 +3,7 @@
  * creates saved rolls for each roll in localstorage
  */
 function loadSavedRolls(){
-    var rollKeys = getPregenKeys("roll");
+    var rollKeys = getPregenKeys("rollKey");
     for(x in rollKeys){
         roll = localStorage.getItem(rollKeys[x]);
         saveDieRoll(roll, true);}
@@ -138,7 +138,8 @@ function int_add(str_int, sign){
  * @returns {boolean} true if rolls should be shown
  */
 function should_show_rolls(){
-    return document.getElementById("show_rolls").checked;
+    //return document.getElementById("show_rolls").checked;
+    return $("#show_rolls").prop("checked");
 }
 
 /**
@@ -207,7 +208,7 @@ function multi_roll(term, sign){
  */
 function display_result(total, min=null, avg=null, max=null){
     var output = document.getElementById("output");
-    output.innerHTML = "your total roll was: <b>" + total+"</b>";
+    output.innerHTML = "your total roll is: <b>" + total+"</b>";
 }
 
 /**
@@ -413,8 +414,7 @@ function rollIsTaken(roll){
 function saveDieRoll(roll=null, startingLoad=false){
     //save die roll on sidebar
     if(roll == null){
-        var el = document.getElementById("input");
-        var roll = el.value;}
+        var roll = $("#input").val();}
 
     if(rollIsTaken(roll)){
         errorTxt("die has already been added", "rollError");
@@ -428,7 +428,8 @@ function saveDieRoll(roll=null, startingLoad=false){
     +'</button><button onclick="deleteParent(this)">del</button>';
 
     var rollElem = newElem("div", innerTxt, true);
-    rollElem.setAttributeNode(newAtt("class", "pastRolls"));
+    //rollElem.setAttributeNode(newAtt());
+    $(rollElem).attr("class", "pastRolls");
 
     var rollMama = document.getElementById("savedRolls");
     rollMama.insertBefore(rollElem, rollMama.childNodes[0]);
@@ -443,7 +444,7 @@ function saveDieRoll(roll=null, startingLoad=false){
  * @param {string} roll the roll to be stored
  */
 function storeRoll(roll){
-    var key = getNewKey("roll");
+    var key = getNewKey("rollKey");
     localStorage.setItem(key, roll);
 }
 
@@ -452,7 +453,7 @@ function storeRoll(roll){
  * @param {string} roll the roll to be removed
  */
 function deleteStoredRoll(roll){
-    var rollKeys = getPregenKeys("roll");
+    var rollKeys = getPregenKeys("rollKey");
     for(x in rollKeys){
         var cont = localStorage.getItem(rollKeys[x]);
         if(cont == roll){
@@ -466,6 +467,10 @@ function deleteStoredRoll(roll){
  * toggles whether or not the user can see the saved rolls
  * @param {HTMLelement} childEl the saved roll holder element
  */
-function toggleSavedRolls(childEl){
-    document.getElementById("savedRolls").hidden=!childEl.checked;
+function toggleSavedRolls(shouldShow=null){
+    if(shouldShow != null){
+        $("#savedRolls").toggle(shouldShow);
+        return;
+    }
+    $("#savedRolls").toggle();
 }

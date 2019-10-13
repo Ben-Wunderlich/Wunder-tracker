@@ -1,19 +1,68 @@
 var ALL_NAMES =["", " "];
 var DEFAULT_HP = 20
-var MAX_LENGTH = 35;
-
-startingSetup();
+var MAX_LENGTH = 25;
 
 /**
  * creates all the pregens in storage if chosen in storage
  */
 function startingSetup(){
-   startingPregens();
-
-    document.getElementById("initialize").checked=initializeChars();
-    
+    startingPregens();
     loadSavedRolls();
-    styleReorder(true);
+    sortReminder(true);
+    initCheckBoxes();
+}
+
+/**
+ * stores the user preference for whether to initialize pregens
+ * @param {HTMLElement} el the checkbox being toggled
+ */
+function saveCheckbox(el){
+    localStorage.setItem($(el).attr("id"), $(el).prop("checked"));
+}
+
+/**
+ * handles events associated with checking/unchecking some boxes during startup
+ * @param {HTMLElement} el the checkbox element
+ * @param {boolean} isChecked whether is is checked or unchecked(checked if true)
+ */
+function checkboxReprecussions(el, isChecked){
+    switch($(el).attr("id")){
+        case "nameGenBox":
+            toggleNameGen(isChecked);return;
+        case "showPregens":
+            generalToggle(".allpregens", isChecked);return;
+        case "showSavedRolls":
+            generalToggle("#savedRolls", isChecked);return;
+     }
+}
+
+/**
+ * initializes check boxes being checked based on localstorage during startup
+ */
+function initCheckBoxes(){
+    var allInps = $("input").get();
+    for (el of allInps){
+        if($(el).attr("type") == "checkbox"){
+            var beChecked = boolFromStorage($(el).attr("id"));
+            $(el).prop("checked", beChecked);
+            checkboxReprecussions(el, beChecked);
+        }
+    }
+}
+
+/**
+ * togges an element on or off based on selector and bool
+ * if bool is null it will just make it opposite, else it will use bool
+ * if true, will be shown, else will hide
+ * @param {string} selector the jquery selector to find the element
+ * @param {boolean} shouldShow whether element(s) should be shown or hidden
+ */
+function generalToggle(selector, shouldShow=null){
+    if(shouldShow != null){
+        $(selector).toggle(shouldShow);
+        return;
+    }
+    $(selector).toggle();
 }
 
 /**
@@ -31,18 +80,6 @@ function newElem(type, value, setInner=false){
     else{
         newEl.value = value;}
     return newEl;
-}
-
-/**
- * creates new attribute with an initial value
- * @param {str} type the type of attribute, must be all caps
- * @param {string} value the value assigned to the attribute
- * @returns {HTMLobject} the attribute
- */
-function newAtt(type, value){
-    var att=document.createAttribute(type);
-    att.value=value;
-    return att;
 }
 
 /**
@@ -65,7 +102,7 @@ function isAHero(init, hp){
     if(init==null && hp!=null){//if no init but has hp
         return false;}
     else{errorTxt("check isAhero, something went very wrong");
-    debug("check isAhero, something went very wrong");}
+    console.log("check isAhero, something went very wrong");}
 }
 
 /**
@@ -106,28 +143,26 @@ function errorWiggle(elem){
  * @param {string} id alternative element
  */
 function errorTxt(text, id="error"){
-    var target = document.getElementById(id);
+    var target = $("#"+id).get(0);
     if(target.innerHTML == text){//if error already being shown
         errorWiggle(target);
     }
-    target.innerHTML = text;
+    else{$(target).text(text);}
 }
 
 /**
  * sets the errorText element to ""
  */
 function clearErrors(){
-    document.getElementById("error").innerHTML="";
-    document.getElementById("rollError").innerHTML="";
+    $(".genError").text("");
 }
 
 /**
- * gets a random number between 1 and 20
+ * generates a random number between 1 and 20
  * @return {int} the number from 1 to 20
  */
 function getRoll(){
-    var rand = Math.floor(Math.random()*20 + 1);
-    return rand;
+    return Math.floor(Math.random()*20 + 1);
 }
 
 /**
@@ -141,28 +176,14 @@ function replaceName(oldName, newName){
 }
 
 /**
- * finds the lengths of the innerHTML of all
- * span children of an element
- * @param {HTMLelement} el the element being checked
- * @returns {int} the length of all it's children
- */
-function allChildsLen(el){
-    var innersLen = 0;
-    var childs = filterList(el.childNodes, "SPAN");
-    for(x in childs){
-        innersLen += childs[x].innerHTML.length;
-    }
-    innersLen += filterList(el.childNodes, "INPUT")[0].value.length;
-    return innersLen;}
-
-/**
  * determines if the total space teken by an element
  * is too big to display
  * @param {HTMLElement} el one of the children of the list element
- * @returns {boolean} true if it is too long
+ * @returns {boolean} true if it is too long, else false
  */
 function nameTooLong(el){
-    var len = allChildsLen(el.parentNode);
+    var len = $(el).val().length;
+    console.log(len);
     if(len > MAX_LENGTH){
         return true;
     }
@@ -174,15 +195,13 @@ function nameTooLong(el){
  * @param {HTMLElement} el the element to be renamed
  */
 function rename(el){
-
     var newEl = newElem("input", el.innerHTML);
     newEl.name = el.innerHTML;
 
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setName(this);}");
-    newEl.setAttributeNode(att);
-    newEl.setAttributeNode(newAtt("size", "8"));
+    $(newEl).attr("onkeypress", "if(event.keyCode == 13){setName(this);}");
+    $(newEl).attr("size", "8");
 
-    el.parentElement.replaceChild(newEl, el);
+    $(el).replaceWith(newEl);
 }
 
 /**
@@ -219,28 +238,29 @@ function isListElement(el){
  */
 function setName(elem){
     var newName = elem.value;
-    var oldName = elem.name;
+    var oldName = $(elem).attr("name"); //$(elem).parent().attr("id");
+    var removeErrors = true;
 
     if(!nameIsFree(newName, oldName)){
         newName=oldName;
-        errorTxt("name already taken");}
+        errorTxt("name already taken");
+        removeErrors=false;}
     
     if(nameTooLong(elem)){
         errorTxt("name is too long");
         newName = oldName;
-    }else{clearErrors();}
+        removeErrors=false;}
+    
+    if(removeErrors){clearErrors();}
 
     newEl = newElem("span", newName, true);
-    newEl.id=newName;
     if(isListElement(elem)){
-        elem.parentNode.setAttribute("name",newName);
-        document.getElementById("initiative"+oldName).id = "initiative"+newName;
-        newEl.setAttributeNode(newAtt("class", "name"));
+        $(elem.parentNode).attr("id", newName);
     }
     else{
         updatePregen(elem.parentNode.id, null,newName,null);
     }
-    newEl.setAttributeNode(newAtt("onclick", "rename(this)"));
+    $(newEl).attr("onclick", "rename(this)");
 
     elem.parentNode.replaceChild(newEl, elem);
     replaceName(oldName, newName);
@@ -282,9 +302,8 @@ function newInit(el){
     newEl.id=el.id;
     newEl.name = el.innerHTML;
 
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setInit(this);}");
-    newEl.setAttributeNode(att);
-    newEl.setAttributeNode(newAtt("size", "2"));
+    $(newEl).attr("onkeypress", "if(event.keyCode == 13){setInit(this);}");
+    $(newEl).attr("size", "2");  
     el.parentNode.replaceChild(newEl, el);
 }
 
@@ -295,22 +314,25 @@ function newInit(el){
  */
 function setInit(elem){
     var newInit = elem.value;
+    var removeErrors=true;
     if(!isInt(newInit)){
         newInit=elem.name;
+        removeErrors=false;
         errorTxt("initiative must be a number");}
     
     newEl = newElem("span", newInit, true);
-    newEl.id=elem.id;
-    newEl.setAttributeNode(newAtt("class", "init"));
-    newEl.setAttributeNode(newAtt("onclick", "newInit(this)"));
+    $(newEl).addClass("init");
+    $(newEl).attr("onclick", "newInit(this)");
 
     if(!isListElement(elem)){
         updatePregen(elem.parentNode.id, newInit,null,null);
     }
-    else{elem.parentNode.id=newInit;}//update list item id(for sorting)
+    //else{elem.parentNode.=newInit;}//update list item id(for sorting)
+    else{$(elem).parent().attr("name", newInit);}
 
     elem.parentElement.replaceChild(newEl, elem);
-    clearErrors();styleReorder()
+    if(removeErrors){clearErrors();}
+    sortReminder();
 }
 
 /**
@@ -323,9 +345,8 @@ function changeMaxHp(el){
 
     var newEl = newElem("input", maxHp);
     newEl.id = maxHp;
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setMaxHp(this);}");
-    newEl.setAttributeNode(att);
-    newEl.setAttributeNode(newAtt("size", "2"));
+    $(newEl).attr("onkeypress", "if(event.keyCode == 13){setMaxHp(this);}");
+    $(newEl).attr("size", "2");
     el.parentNode.replaceChild(newEl, el);
 }
 
@@ -339,9 +360,9 @@ function setMaxHp(el){
     if(newMax <= 0){newMax=1;}
 
     newEl = newElem("span", "/"+newMax+" hp", true);
-    newEl.setAttributeNode(newAtt("onclick", "changeMaxHp(this)"));
+    $(newEl).attr("onclick", "changeMaxHp(this)");
 
-    var name = el.parentNode.getAttribute("name");
+    //var name = el.parentNode.getAttribute("name");
 
     if(Number(el.previousElementSibling.innerHTML)> newMax){
         el.previousElementSibling.innerHTML=newMax;
@@ -359,11 +380,9 @@ function changeHp(el){
     var curHp = el.innerHTML.split("/")[0];
     var newEl = newElem("input", curHp);
     newEl.name = curHp;
-    newEl.id = el.id;
 
-    var att=newAtt("onkeypress", "if(event.keyCode == 13){setHp(this);}");
-    newEl.setAttributeNode(att);
-    newEl.setAttributeNode(newAtt("size", "1"));
+    $(newEl).attr("onkeypress", "if(event.keyCode == 13){setHp(this);}");
+    $(newEl).attr("size", "1");
     el.parentNode.replaceChild(newEl, el);
 }
 
@@ -376,7 +395,7 @@ function changeHp(el){
 function setHp(elem){
     var newHp = elem.value;
     var wasAdded = newHp.indexOf("+") > -1;
-    var plzCleanErrors = false;
+    var removeErrors = true;
 
     newHp = evalStr(newHp, elem.name, "health must be a number");
 
@@ -385,16 +404,15 @@ function setHp(elem){
     if(newHp > maxHP && wasAdded){
         var hpDiff = newHp - maxHP;
         errorTxt("healed an excess of "+hpDiff+" points");
-        plzCleanErrors = true;
+        removeErrors = false;
         newHp = maxHP;}
 
     if(!isListElement(elem)){
         updatePregen(elem.parentNode.id, null,null,newHp);
     }
     newEl = newElem("span", newHp, true);
-    newEl.id=elem.id;
-    newEl.setAttributeNode(newAtt("class", "hp"));
-    newEl.setAttributeNode(newAtt("onclick", "changeHp(this)"));
+    $(newEl).addClass("hp");
+    $(newEl).attr("onclick", "changeHp(this)");
 
     if(isListElement(elem)){
         if(newHp <= 0){
@@ -402,8 +420,7 @@ function setHp(elem){
         else{makeRedDel(elem.parentElement, true);}//gets rid of button
     }
     elem.parentElement.replaceChild(newEl, elem);
-    if(!plzCleanErrors){
-        clearErrors();}
+    if(removeErrors){clearErrors();}
 }
 
 /**
@@ -447,18 +464,6 @@ function evalStr(val, backup, errorMsg=null){
 }
 
 /**
- * TESTING METHOD
- * used for sending text to a fixed
- * element on the page
- * @param {any} msg the mesage to be added
- */
-function debug(msg){
-    var target = document.getElementById("debug");
-    var content=target.innerHTML+msg+"<br>";
-    target.innerHTML = content;
-}
-
-/**
  * filters a list so that only elements of the
  * specified type are returned
  * @param {HTMLElement array} list the given list
@@ -476,52 +481,34 @@ function filterList(list, type){
 }
 
 /**
- * TESTING METHOD
- * displays an array
- * @param {array} arr the array to show
+ * gets the integer value of the id attribute
+ * @param {HTMLElement} el
  */
-function showList(arr){
-    for(x in arr){
-        debug(arr[x].id);}}
+function elNum(el){
+    return parseInt($(el).attr("name"));
+}
 
-/**
- * switches the position of 2 adjacent elements
- * NOTE: they must be adjacent for consitent results
- * @param {HTMLElement} obj1 
- * @param {HTMLElement} obj2 
- * @param {HTMLElement Array} arr the array of all elements
- */
-function swapElements(obj1, obj2, arr=null) {
-    var bothsParent=obj1.parentNode;
-    bothsParent.insertBefore(obj2, obj1);
-
-    if(arr==null){return;}
-    var obj1Ind = arr.indexOf(obj1);
-    var obj2Ind = arr.indexOf(obj2);
-    [arr[obj1Ind], arr[obj2Ind]] = [arr[obj2Ind], arr[obj1Ind]];
-    return arr;}
-
-/**
- * sorts an array of html elements where each element
- * has a number as its id, this is what they are sorted by
- * note it is sorted so that higher values are higher on the page
- * @param {HTMLElement Array} arr 
- */
-function bubbleSort(arr){
-    var n = arr.length;
-    for(x=0; x<n; x++){
-        var swapped=false;
-        for(y=0; y<n-1; y++){
-            if(parseInt(arr[y].id) < parseInt(arr[y+1].id)){
-                arr=swapElements(arr[y], arr[y+1], arr);
-                swapped=true;
-            }
+function insertionSort(arr, n){
+    for(i=1; i<n; i++){
+        var savedEl = arr[i];
+        var val = elNum(savedEl);
+        var j = i-1
+        while(j>=0 && elNum(arr[j]) < val){
+            arr[j+1]= arr[j];
+            j--;
         }
-        if(!swapped){
-            console.log("broken after "+(x+1)+" pass(es) of "+(arr.length));
-            break;
-        }
-}}
+        arr[j+1] = savedEl;
+    }
+    return arr;
+}
+
+function replaceChildren(childArr){
+    var parent = $("#mainlist").get(0);
+    $(parent).empty();
+    for (child of childArr){
+        parent.append(child);
+    }
+}
 
 
 /**
@@ -529,8 +516,7 @@ function bubbleSort(arr){
  * or back to the start if it is at the end
  */
 function rotate(){
-    var parent=document.getElementById("mainlist");
-    var childs = filterList(parent.childNodes, "LI");
+    var childs = $("#mainlist").find("li").get();
     if(childs.length==0){return;}
 
     var theStyler = getCurrCr();
@@ -538,27 +524,23 @@ function rotate(){
         createStyle();
         return;
     }
-    theStyler.removeAttribute("class");
+    $(theStyler).removeClass("currInit");
 
-    var prevInd = childs.indexOf(theStyler);
-    var newInd = prevInd + 1;
+    var newInd = childs.indexOf(theStyler) + 1;
     if (newInd >= childs.length){
-    newInd = 0;
-    incrementRound();}
+        newInd = 0;
+        incrementRound();}
 
-    childs[newInd].setAttributeNode(newAtt("class", "currInit")); 
+    $(childs[newInd]).addClass("currInit");
+    clearErrors();
 }
 
 /**
- * moves the class which causes an element to be
- * bolded to the first child of the element with id "mainlist"
+ * adds currInit class the the first element in the main list
+ * the class makes it larger and red
  */
 function createStyle(){
-    var parent=document.getElementById("mainlist");
-    theStyler=parent.childNodes[0];
-
-    var att = newAtt("class", "currInit");
-    theStyler.setAttributeNode(att);
+    $("#mainlist").find("li").first().addClass("currInit");
 }
 
 /**
@@ -566,19 +548,17 @@ function createStyle(){
  * htmlElement with id "mainlist"
  */
 function moveStyleTop(){
-
-    var parent=document.getElementById("mainlist");
-    var childs = filterList(parent.childNodes, "LI");
-    if(childs.length==0){return;}
-
     var theStyler = getCurrCr();
+
     if(theStyler != null){
-        theStyler.removeAttribute("class");}
+        $(theStyler).removeClass("currInit");}
 
     if(theStyler==null){
         createStyle();return;}
 
-    childs[0].setAttributeNode(newAtt("class", "currInit"));
+    if($("#mainlist").find("li").get().length > 0){
+        $("#mainlist").find("li").first().attr("class", "currInit");
+    }
 }
 
 /**
@@ -587,11 +567,11 @@ function moveStyleTop(){
  * ID with highest at the top
  */
 function sortList(){
-    var list=document.getElementById("mainlist");
-    var rawList = list.childNodes;
-    var trimmedList = filterList(rawList, "LI");
-    bubbleSort(trimmedList);
-    moveStyleTop();styleReorder(true);
+    var trimmedList = $("#mainlist").find("li").get();
+    //bubbleSort(trimmedList);
+    var sortedList = insertionSort(trimmedList, trimmedList.length);
+    replaceChildren(sortedList);
+    moveStyleTop();sortReminder(true);
 }
 
 /**
@@ -622,9 +602,7 @@ function getValidName(isHero, base=null){
  * @returns {int} the number of creatures in the list
  */
 function countCreatures(){
-    var mama = document.getElementById("mainlist");
-    var allCreatures = filterList(mama.childNodes, "LI");
-    return allCreatures.length;
+    return $("#mainlist").find("li").get().length;
 }
 
 /**
@@ -643,11 +621,11 @@ function tooManyCr(){
 }
 
 /**
- * XXXmake it so removed when reordered
+ * adds effect to 'reorder' button to remind user to sort the initiative again
  */
-function styleReorder(removeStyle=false){
+function sortReminder(removeStyle=false){
     var name = "empha";
-    var el = document.getElementById("reorder");
+    var el = $("#reorder").get(0);
     if(removeStyle){
         el.classList.remove(name);
     }
@@ -659,7 +637,7 @@ function styleReorder(removeStyle=false){
  * @param {int} init the initiative of the hero
  * @param {string} name the name of the hero
  */
-function addHero(init=0, name=null){
+function addHero(init=-1, name=null){
     if(tooManyCr()){return;}
     if(name == null || !nameIsFree(name)){
         heroName=getValidName(true, name);}
@@ -673,21 +651,18 @@ function addHero(init=0, name=null){
     var delShowing = !document.getElementById("genocide").hidden;
     var hiddenStr = ""
     if(!delShowing){hiddenStr=' hidden="true" ';}
-    var insideTxt = '<span id="initiative'+heroName+
-    '" class="init" onclick="newInit(this)">'+init+
-    '</span><span id="'+heroName+
-    '" onclick="rename(this)" class="name">'+heroName+
-    '</span><button onclick="removeCreature(this)" class="del"'
-    +hiddenStr+'>del</button>'
+
+    var insideTxt = '<span class="init" onclick="newInit(this)">'+init+'</span>'
+    +'<span class="name" onclick="rename(this)">'+heroName+'</span>'
+    +'<button class="del"'+hiddenStr+'onclick="removeCreature(this)" >del</button>'
 
     var el = newElem('li', insideTxt, true);
-    el.setAttributeNode(newAtt("name", heroName));
-    el.id=init;
+    $(el).attr("name", init);
+    $(el).attr("id", heroName);
 
-    var listParent = document.getElementById("mainlist");
-    listParent.insertBefore(el, listParent.childNodes[0]);
+    $("#mainlist").prepend(el);
     
-    moveStyleTop();clearErrors();styleReorder()
+    moveStyleTop();clearErrors();sortReminder()
 }
 
 /**
@@ -710,20 +685,18 @@ function getNewEnemy(init, enNom, hp){
     }
         ALL_NAMES.push(enNom);
     var el = newElem('li', enNom, true);
-    el.id=init;
-    el.setAttributeNode(newAtt("name", enNom));
+    el.id=enNom;
+    $(el).attr("name", init);
+
     var delShowing = !document.getElementById("genocide").hidden;
     var hiddenStr = "";
     if(!delShowing){hiddenStr=' hidden="true" ';}
 
-    var insideTxt = '<span id="initiative'+enNom+
-    '" onclick="newInit(this)" class="init">'+init+'</span><span id="'
-    +enNom+'" onclick="rename(this)" class="name">'
-    +enNom+'</span><span id="hp'+enNom+
-    '" onclick="changeHp(this)" class="hp">'+hp+
-    "</span><span onclick='changeMaxHp(this)'>/"+hp+" hp"+
-    '</span><button onclick="removeCreature(this)" class="del"'
-    +hiddenStr+'">del</button>';
+    var insideTxt = '<span onclick="newInit(this)" class="init">'+init+'</span>'+
+    '<span onclick="rename(this)" class="name">'+enNom+'</span>'+
+    '<span onclick="changeHp(this)" class="hp">'+hp+'</span>'+
+    '<span onclick="changeMaxHp(this)">/'+hp+" hp"+'</span>'+
+    '<button onclick="removeCreature(this)" class="del"'+hiddenStr+'">del</button>';
 
     el.innerHTML = insideTxt;
     return el;
@@ -737,21 +710,20 @@ function getNewEnemy(init, enNom, hp){
  */
 function addEnemy(init=null, name=null, hp=null){
     if(tooManyCr()){return;}
-    if(init==null || !isInt(init)){init=getRoll();}
+    if(init==null || !isInt(init)){init=get_rand(1,20);}
     if(hp==null){hp=DEFAULT_HP;}
 
     var el = getNewEnemy(init, name, hp);
     if(el==null){return;}
-    var listParent = document.getElementById("mainlist");
-    listParent.insertBefore(el, listParent.childNodes[0]);
-    moveStyleTop();clearErrors();styleReorder();
+    $("#mainlist").prepend(el);
+    moveStyleTop();/*clearErrors();*/sortReminder();
 }
 
 /**
- * XXX
+ * @returns {HTMLElement} the creature currently highlighted
  */
 function getCurrCr(){
-    return document.getElementsByClassName("currInit")[0];
+    return $(".currInit").get(0);
 }
 
 /**
@@ -778,10 +750,7 @@ function killEveryone(){
         return;
     }
     alert("you monster...");
-    var allMother = document.getElementById("mainlist");
-    var allChildren = filterList(allMother.childNodes, "LI");
-    for(x in allChildren){
-        removeCreature(allChildren[x].childNodes[0]);}
+    $("#mainlist").empty();
     toggleDelete();
 }
 
@@ -790,7 +759,7 @@ function killEveryone(){
  * for each creature and genocide button
  */
 function toggleDelete(){
-    var delButts = document.getElementsByClassName("del");
+    var delButts = $(".del").get();
     var doReveal = !delButts[0].hidden;
   
     for(x in delButts){
@@ -801,17 +770,11 @@ function toggleDelete(){
 
 /**
  * clears all inputs where user enters creature data
- * XXX@param
  */
-function clearNewCr(elToClear=null){
-    if(elToClear!=null){
-        elToClear.value="";return;}
-
-    if(!document.getElementById("clearInputs").checked){
+function clearNewCr(){
+    if(!$("#clearInputs").prop("checked")){
         return;}
-    document.getElementById("newHp").value="";
-    document.getElementById("newName").value="";
-    document.getElementById("newInit").value="";
+    $("#inputBoxes input").val("");
 }
 
 /**
@@ -819,9 +782,9 @@ function clearNewCr(elToClear=null){
  * based on text fields
  */
 function constructCr(){
-    var crName=document.getElementById("newName").value;
-    var init=document.getElementById("newInit").value;
-    var hp=document.getElementById("newHp").value;
+    var crName= $("#newName").val();
+    var init= $("#newInit").val();
+    var hp= $("#newHp").val();
     if(!isInt(init)){init=null;}
     if(!isInt(hp)){hp=null;}
 
@@ -842,7 +805,7 @@ function constructCr(){
  * red if they are low on health
  */
 function makeRedDel(parent, undo=false){
-    var butt=filterList(parent.childNodes, "BUTTON")[0];
+    var butt = $(parent).find("button").get(0);
     butt.hidden=false;
     butt.id="closetodeath";
     if(undo){
@@ -852,18 +815,32 @@ function makeRedDel(parent, undo=false){
 }
 
 /**
+ * determines whether or not reseting the round will change anything
+ * returns true if nothing will change or false if something will change
+ * @param {int} curRound the current round
+ */
+function futileReset(curRound){
+    if(curRound>1){
+        return false;
+    }
+    return $("#mainlist").children().get(0).className == "currInit";
+}
+
+/**
  * increments the counter that keeps track of
  * which round it is, or changes it back to 1
  * @param {boolean} resetRound if true round set to 1
  */
 function incrementRound(resetRound=false){
-    var el=document.getElementById("round");
-    var curRound = parseInt(el.innerHTML);
+    //var el=document.getElementById("round");
+    //var curRound = parseInt(el.innerHTML);
+    var el = $("#round").get(0);
+    var curRound = parseInt($(el).text());
     if(resetRound){
-        moveStyleTop();
-        if(el.innerHTML==1){
+        if(futileReset(curRound)){
             errorTxt("round already reset");}
-        el.innerHTML = 1;}
+        moveStyleTop();
+        $(el).html(1);}
     else{
         el.innerHTML = curRound+1;
         clearErrors();}
@@ -875,13 +852,14 @@ function incrementRound(resetRound=false){
  */
 function startingPregens(){
     var allKeys = getPregenKeys();
-    var shouldMakeButts = initializeChars();
+    var shouldMakeButts = boolFromStorage("initialize");
     for(x in allKeys){
         var key = allKeys[x];
         createPregenButton(key);
-        var el = document.getElementById(key);
+
         if(shouldMakeButts){
-            addFromPregen(el.childNodes[0]);}
+           addFromPregen(null, key);
+        }
     }
 }
 
@@ -920,8 +898,10 @@ function getPregenKeys(base="pregen"){
  * adds a creature from a pregen to the main list
  * @param {HTMLelement} elem the element to be added
  */
-function addFromPregen(elem){
-    var key = elem.parentNode.id;
+function addFromPregen(elem, key=-1){
+    if (key == -1){
+        var key = elem.parentNode.id;
+    }
 
     var contents = localStorage.getItem(key).split(";");
     var init = contents[0];
@@ -960,13 +940,14 @@ function pregenIsRedundant(name){
  */
 function savePregen(){
 
-    var init = document.getElementById("newInit").value;
-    var name = document.getElementById("newName").value;
-    var hp = document.getElementById("newHp").value;
+    var init = $("#newInit").val();
+    var name = $("#newName").val();
+    var hp = $("#newHp").val();
     if(pregenIsRedundant(name)){
         errorTxt("name is taken");
         return;}
-    if((init+name+hp).length > MAX_LENGTH){
+    
+    if(init+name+hp > MAX_LENGTH){
         errorTxt("name is too long");return;}
     
     clearErrors();
@@ -976,9 +957,9 @@ function savePregen(){
     localStorage.setItem(key, info);
 
     createPregenButton(key);
-
-    document.getElementById("showPregens").checked=true;
-    togglePregens(document.getElementById("showPregens"));
+        
+    $("#showPregens").get(0).checked=true;
+    togglePregens(true);
 }
 
 /**
@@ -992,24 +973,24 @@ function createPregenButton(key){
     var name = contents[1];
     var hp = contents[2];
     var isHero = isAHero(init, hp);
-    var mamaNode = document.getElementById("pregens");
+    var mamaNode = $("#pregens").get(0);
     if(isHero){
-        var innerStr = '<span onclick = "newInit(this)">'
-        +init+'</span>'+" <span id='' onclick=rename(this)>"
-        +name+'</span></span><button onclick="addFromPregen(this)">'+
-        'create</button><button onclick="removePregen(this)">destroy</button>'
+        var innerStr = '<span onclick = "newInit(this)">'+init+'</span>'
+        +' <span id="" onclick=rename(this)>'+name+'</span>'+
+        '<button onclick="addFromPregen(this)">'+'create</button>'+
+        '<button onclick="removePregen(this)">destroy</button>'
         var newEl = newElem("div", innerStr, true);
     }
     else{
-        var innerStr = '<span onclick = "newInit(this)">'
-        +init+"</span> <span id='' onclick=rename(this)>"
-        +name+'</span><span onclick = "changeHp(this)"> '+hp+
-        '</span><button onclick="addFromPregen(this)">'+
-        'create</button><button onclick="removePregen(this)">destroy</button>'
+        var innerStr = '<span onclick = "newInit(this)">'+init+'</span>'
+        +'<span id="" onclick=rename(this)>'+name+'</span>'+
+        '<span onclick = "changeHp(this)"> '+hp+'</span>'+
+        '<button onclick="addFromPregen(this)">'+'create</button>'+
+        '<button onclick="removePregen(this)">destroy</button>'
         var newEl = newElem("div", innerStr, true);
     }
     newEl.id=key;
-    mamaNode.insertBefore(newEl, mamaNode.childNodes[0]);
+    $(mamaNode).prepend(newEl);
 }
 
 /**
@@ -1036,34 +1017,16 @@ function updatePregen(key, init, name, hp){
 function removePregen(node){
     var key = node.parentNode.id;
     localStorage.removeItem(key);
-    var oneToDie = document.getElementById(key);
-    if(oneToDie != null){
-        oneToDie.parentNode.removeChild(oneToDie);}
+    $("#"+key).remove();
 }
 
 /**
- * checks if the checkbox passed in is checked
- * and making pregens visible if it is,
- * otherwise they are hidden
- * @param {HTMLelement} checkBox the box to check
+ * changes visibility of pregens
+ * @param {int or bool} manualSet if blank/-1 will toggle pregen, if bool will
+ * show pregens if true, otherwise false
  */
-function togglePregens(checkBox){
-    el = document.getElementsByClassName("allpregens")[0];
-    if(checkBox.checked){
-        el.hidden=false;}
-    else{
-        el.hidden=true;}
-}
-
-/**
- * stores the user preference for whether to initialize pregens
- * @param {HTMLElement} el the checkbox being toggled
- */
-function toggleInitialize(el){
-    if(el.checked){
-        localStorage.setItem("initializing", true);}
-    else{
-        localStorage.setItem("initializing", false);}
+function togglePregens(manualSet=null){
+    generalToggle(".allpregens", manualSet)
 }
 
 /**
@@ -1071,28 +1034,25 @@ function toggleInitialize(el){
  * be initialized, it is true by default
  * @returns {boolean} true if pregens should be made
  */
-function initializeChars(){
-    var shouldMake = localStorage.getItem("initializing");
-    switch(shouldMake){
+function boolFromStorage(key){
+    var item = localStorage.getItem(key);
+    switch(item){
         case null:
         case "true":
             return true;//true by default
         case "false":
             return false;
         default:
-            debug("ERROR, something went wrong when accessing"+
+            console.log("ERROR, something went wrong when accessing"+
             " local storage, try clearing it to fix problem");
     }
 }
 
 /**
- * looks at a checkbox and makes name generator window
- * hidden if it isn't checked and vice versa
- * @param {HTMLElement} el the checkbox being checked
+ * hides name generator it it is hidden and vice versa
  */
-function toggleNameGen(el){
-    var nameGenerator= document.getElementById("hideNameGen");
-    nameGenerator.hidden = !el.checked;
+function toggleNameGen(shouldShow=null){
+    generalToggle("#hideNameGen", shouldShow);
 }
 
 /**
@@ -1138,3 +1098,5 @@ function rickRoll(el){
     window.open(link, '_blank');
     el.innerHTML=changeTo;
 }
+
+startingSetup();
