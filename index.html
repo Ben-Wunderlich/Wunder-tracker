@@ -13,14 +13,14 @@
 <div id=topbutts>
         <button onclick="addHero()">add hero</button>
         <button onclick="addEnemy()">add enemy</button>
-        <button onclick="toggleDelete()">toggle deletes</button>
-        <button onclick="killEveryone()" hidden="true>"
-             class="del" id="genocide">kill them all</button>
+        <input type="checkbox" id="clearInputs" onclick="clearNewCr();saveCheckbox(this)">
+        <span>clear inputs?</span>
+             
 </div><br><br>
 
 <div id="botbutts">
-    <input type="checkbox" id="clearInputs" onclick="clearNewCr();saveCheckbox(this)">
-    <span>clear inputs?</span>
+    <button onclick="toggleDelete()">toggle deletes</button>
+    <button onclick="killEveryone()" hidden="true>"class="del" id="genocide">kill them all</button>
 </div>
 
 <br>
@@ -35,7 +35,7 @@
     
     <br><input type="checkbox" id="showPregens" onclick="togglePregens();saveCheckbox(this)">show pregens    
     <input type="checkbox" id="initialize" onclick="saveCheckbox(this)">initialize creatures 
-    <input type="checkbox" id="nameGenBox" onclick="toggleNameGen();saveCheckbox(this)">nameGenerator?
+    <input type="checkbox" id="nameGenBox" onclick="toggleNameGen();saveCheckbox(this)">name generator
 </span>
 
 <span class=allpregens hidden="true">
@@ -57,6 +57,7 @@
 
 
 <div id="diceroller" draggable="true">
+    <div id="xLine"></div>
     <span id=errHold><div id="rollError" class="genError"></div></span>
     <div id="roller_gui">
         <h3>enter dice here</h3>

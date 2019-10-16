@@ -42,7 +42,7 @@ button{
 
 #holder{
     top: -145px;
-    left: 160px;
+    left: 220px;
     width: 200px;
     position: relative;
 
@@ -186,4 +186,10 @@ button{
     animation-name: attentionGrab;
     animation-duration: 1s;
     animation-iteration-count: 1;
+}
+
+#xLine{
+    width:100%;
+    height:2px;
+    background-image: repeating-radial-gradient(white, black);
 }

@@ -68,10 +68,10 @@ function generalToggle(selector, shouldShow=null){
 /**
  * creates new element of a given value
  * @param {string} type the type of element to be created
- * @param {string} value the thing to be in
+ * @param {string} value the thing to be inserted into element
  * @param {boolean} setInner (optional)if true
- * inserts value as innerhtml
- * @returns {element} the element with value given
+ * inserts value as innerhtml instead of value
+ * @returns {HTMLelement} the element created
  */
 function newElem(type, value, setInner=false){
     var newEl = document.createElement(type);
@@ -83,11 +83,10 @@ function newElem(type, value, setInner=false){
 }
 
 /**
- * determines wheter  values correspond to a hero
- * or villain
+ * determines wheter passed values correspond to a hero or villain
  * @param {int} init 
  * @param {int} hp 
- * @return {boolean} true if corresponds to a hero
+ * @return {boolean} true if corresponds to a hero, else false
  */
 function isAHero(init, hp){
     if(init=="" || !isInt(init)){init=null;}
