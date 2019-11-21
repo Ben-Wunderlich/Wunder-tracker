@@ -822,9 +822,6 @@ function futileReset(curRound){
     if(curRound>1){
         return false;
     }
-    if($("#mainlist li").length == 0){//if no elements in list
-        return true;
-    }
     return $("#mainlist").children().get(0).className == "currInit";
 }
 
@@ -1038,13 +1035,8 @@ function togglePregens(manualSet=null){
  */
 function boolFromStorage(key){
     var item = localStorage.getItem(key);
-    var default_unchecked=["nameGenBox", "showPregens", "clearInputs"];
     switch(item){
         case null:
-            if(default_unchecked.includes(key)){
-                return false;
-            }
-            else{return true;}
         case "true":
             return true;//true by default
         case "false":
