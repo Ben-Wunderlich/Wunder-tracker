@@ -2,6 +2,39 @@ var ALL_NAMES =["", " "];
 var DEFAULT_HP = 20
 var MAX_LENGTH = 25;
 
+var downKeys = new Set();
+
+$("body").keydown(function (e) {
+    //console.log(e.which);
+    //console.log(downKeys)
+    switch(e.which){
+        case 40:
+            if (downKeys.has(16) && !downKeys.has(40)){//shift + down arrow
+                rotate();break;
+            }
+            break;
+        case 46:
+            if(!downKeys.has(46)){//del
+                toggleDelete();break;}
+            break;
+        case 38:
+            if (downKeys.has(16) && !downKeys.has(38)){//shift + up arrow
+                sortList();break;
+            }
+            break;
+        case 39:
+            if (downKeys.has(16) && !downKeys.has(39)){//shift + right arrow
+                constructCr();break;
+            }
+            break;
+    }
+    downKeys.add(e.which);
+});
+
+$("body").keyup(function (e) {
+    downKeys.delete(e.which)
+});
+
 /**
  * creates all the pregens in storage if chosen in storage
  */

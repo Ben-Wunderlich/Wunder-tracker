@@ -27,6 +27,8 @@ html{
     top: 120px;
 
 }
+
+/* make everything positioned absolutely, not relative */
 #main list{
     float: left;
     margin: 100px;
@@ -105,6 +107,10 @@ button{
 }
 #mainlist{
     font-size: 20px;
+}
+
+#mainlist li{
+    padding: 5px;
 }
 
 #genocide{

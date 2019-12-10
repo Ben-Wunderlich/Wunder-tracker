@@ -19,7 +19,7 @@
 </div><br><br>
 
 <div id="botbutts">
-    <button onclick="toggleDelete()">toggle deletes</button>
+    <button onclick="toggleDelete()" title="or press del">toggle deletes</button>
     <button onclick="killEveryone()" hidden="true>"class="del" id="genocide">kill them all</button>
 </div>
 
@@ -30,7 +30,7 @@
         <input type="text" id="newName" placeholder="name" size="8">
         <input type="text" id="newHp" placeholder="health" size="2">
     </span>
-    <button onclick="constructCr()">make creature</button>
+    <button onclick="constructCr()" title="or press shift+right arrow">make creature</button>
     <button onclick="savePregen()">save</button>
     
     <br><input type="checkbox" id="showPregens" onclick="togglePregens();saveCheckbox(this)">show pregens    
@@ -45,9 +45,9 @@
 
 <h3>
     <span id="roundheader">round </span><span id="round">1</span>
-    <button onclick="rotate()">next turn</button>
+    <button onclick="rotate()" title="or press shift+down arrow">next turn</button>
     <button onclick="incrementRound(true)">reset round</button>
-    <button onclick="sortList()" id="reorder">reorder</button>
+    <button onclick="sortList()" id="reorder" title="or press shift+up arrow">reorder</button>
     <div id="holder"><p id="error" class="genError"></p></div>
 </h3>
 
