@@ -1,3 +1,5 @@
 # wunder tracker
 
-I will probably only be the only person to ever read this, I just think that is kind of interesting.
+An initiative tracker I made to make my combats in D&D easier to manage.
+
+I have it up [here](https://studentweb.uvic.ca/~bwunderlich/wunder_tracker2)
